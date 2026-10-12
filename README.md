@@ -10,7 +10,7 @@ Vos références ne sont jamais réimportées ni converties : Biblikube les lit 
 écrit, au fur et à mesure, le résultat de chaque étape (collections, étiquettes, notes). Les titres, résumés et
 accents restent exactement comme dans Zotero.
 
-> 🧪 Version 0.1 : fonctionnelle mais jeune. Faites des sauvegardes (export JSON) et signalez les problèmes dans
+> 🧪 Version 0.2 : fonctionnelle mais jeune. Faites des sauvegardes (export JSON) et signalez les problèmes dans
 > les *issues* GitHub.
 
 ---
@@ -170,6 +170,27 @@ Aujourd’hui : utilisez une **bibliothèque de groupe Zotero**. Chaque membre v
 prévu dans la feuille de route.
 
 ---
+
+## Nouveautés
+
+Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
+est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
+
+**0.2 — octobre 2026**
+- LitFlow devient **Biblikube**, avec son logo (le cube, par Maude Leblanc-Côté). Les revues déjà commencées
+  continuent de fonctionner.
+- Démarrage guidé en 3 questions, menu adapté à votre usage et guide « Pour bien démarrer ».
+- « Point d’étape » en PDF pour faire le point avec sa direction, aux couleurs de l’ambiance.
+- Doublons plus faciles à départager (titre du livre, pages, ISBN, différences surlignées, notes) ; notes Zotero et
+  surlignages des PDF visibles dans les cartes.
+- Organisation par catégories, sous-catégories et marqueurs, vue « Tri en cercle », onglet « Toutes », trois façons
+  de créer son plan.
+- Cinq ambiances de couleurs, import des décisions Rayyan.
+- FAQ « Sécurité et confidentialité » sur l’accueil, et une version test séparée (/test/).
+
+**0.1 — septembre 2026**
+- Première version : tri titre-résumé en cartes, texte intégral, diagramme PRISMA 2020, synchronisation avec Zotero
+  dans les deux sens.
 
 ## Pour les développeuses et développeurs
 

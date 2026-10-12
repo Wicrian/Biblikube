@@ -100,6 +100,9 @@ export function Faq() {
           </details>
         ))}
       </div>
+      <p className="small muted" style={{ margin: 0, textAlign: 'right' }}>
+        Biblikube {__APP_VERSION__.replace(/\.0$/, '')}
+      </p>
     </section>
   );
 }
