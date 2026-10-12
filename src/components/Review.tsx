@@ -2,7 +2,7 @@ import { Check, HelpCircle, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Decision, Project, RecordItem, Stage, StageDecision } from '../types';
 import { applyFilters, emptyFilters, sortRecords, type Filters, type SortKey } from '../lib/filters';
-import { fulltextKeys, recordKind, screeningKeys } from '../lib/prisma';
+import { fulltextKeys, recordKind, screeningKeys, setAsideDecisions, setAsideText } from '../lib/prisma';
 import { authorsShort, highlight, splitKeywords } from '../lib/text';
 import { useProject } from '../store';
 import { ZoteroNotes } from './ZoteroNotes';
@@ -517,6 +517,7 @@ function Sidebar({
   onJump: (k: string) => void;
 }) {
   const { project: p } = useProject();
+  const aside = setAsideText(setAsideDecisions(p, stage));
   return (
     <>
       <div className="panel stack small">
@@ -543,6 +544,11 @@ function Sidebar({
             <div className="tile-value">{counts.none}</div>
           </div>
         </div>
+        {aside && (
+          <p className="muted" style={{ margin: 0 }}>
+            ℹ️ Vous avez aussi pris des décisions sur des références écartées depuis : {aside}. Elles ne comptent plus ici.
+          </p>
+        )}
       </div>
       {(p.question || p.inclusionCriteria.length > 0 || p.exclusionCriteria.length > 0) && (
         <details className="panel small" open>

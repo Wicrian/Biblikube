@@ -4,7 +4,7 @@
 import type { Project } from '../types';
 import { findDuplicateGroups } from './dedup';
 import { categoryLabel, orderedCategories } from './organisation';
-import { fulltextKeys, screeningKeys } from './prisma';
+import { fulltextKeys, screeningKeys, setAsideDecisions, setAsideText } from './prisma';
 import { authorsShort } from './text';
 
 export interface ReportData {
@@ -18,7 +18,8 @@ export interface ReportData {
   unique: number;
   openDuplicates: number;
   sourcesCount: number;
-  screening: { total: number; include: number; exclude: number; maybe: number } | null;
+  /** `aside` : décisions prises sur des références écartées ensuite (texte, vide si aucune). */
+  screening: { total: number; include: number; exclude: number; maybe: number; aside: string } | null;
   fulltext: { total: number; done: number; include: number; exclude: number; notRetrieved: number } | null;
   steps: { label: string; pct: number; text: string }[];
   plan: {
@@ -52,7 +53,7 @@ export function reportData(p: Project, today = new Date()): ReportData {
   const usesFulltext = p.mode !== 'organise' && (fd.length > 0 || Object.keys(p.notRetrieved).length > 0);
 
   const screening = usesScreening
-    ? { total: sk.length, include: sd.filter((d) => d === 'include').length, exclude: sd.filter((d) => d === 'exclude').length, maybe: sd.filter((d) => d === 'maybe').length }
+    ? { total: sk.length, include: sd.filter((d) => d === 'include').length, exclude: sd.filter((d) => d === 'exclude').length, maybe: sd.filter((d) => d === 'maybe').length, aside: setAsideText(setAsideDecisions(p, 'screening')) }
     : null;
   const notRetrieved = fk.filter((k) => k in p.notRetrieved).length;
   const fulltext = usesFulltext
@@ -181,7 +182,9 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
         const tot = d.screening.include + d.screening.maybe + d.screening.exclude;
         return `<div class="card"><h2>Décisions du tri titre-résumé</h2>${rows
           .map(([l, v, c]) => `<div class="dec"><span>${l}</span><div class="bar" style="width:${((v / max) * 100).toFixed(1)}%;background:${c}"></div><span class="num"><b>${n(v)}</b> · ${pct(v, tot)} %</span></div>`)
-          .join('')}<div class="note">Sur ${n(tot)} références triées.</div></div>`;
+          .join('')}<div class="note">Sur ${n(tot)} références triées.${
+          d.screening.aside ? ` D’autres décisions ont été prises sur des références écartées depuis (${esc(d.screening.aside)}) : elles ne sont pas comptées ici.` : ''
+        }</div></div>`;
       })()
     : '';
 

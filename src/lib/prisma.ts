@@ -33,6 +33,29 @@ export function fulltextKeys(p: Project): string[] {
     .map((r) => r.key);
 }
 
+/**
+ * Décisions prises sur des références écartées ensuite : marquées comme doublons,
+ * ou retirées de la revue (plus dans la collection Zotero). Le travail a été
+ * fait, mais ces décisions ne comptent plus dans l'avancement : on le signale.
+ */
+export function setAsideDecisions(p: Project, stage: 'screening' | 'fulltext'): { duplicates: number; removed: number } {
+  let duplicates = 0;
+  let removed = 0;
+  for (const key of Object.keys(p[stage])) {
+    if (!p.records[key]) removed++;
+    else if (isDuplicate(p, key)) duplicates++;
+  }
+  return { duplicates, removed };
+}
+
+/** « 2 doublons et 1 référence retirée » */
+export function setAsideText(a: { duplicates: number; removed: number }): string {
+  const parts = [];
+  if (a.duplicates) parts.push(`${a.duplicates} marquée${a.duplicates > 1 ? 's' : ''} ensuite comme doublon${a.duplicates > 1 ? 's' : ''}`);
+  if (a.removed) parts.push(`${a.removed} retirée${a.removed > 1 ? 's' : ''} ensuite de la revue`);
+  return parts.join(' et ');
+}
+
 export interface Column {
   sought: number;
   notRetrieved: number;
