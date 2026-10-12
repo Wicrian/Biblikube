@@ -12,6 +12,7 @@ import { DECISION_UI, ReasonSheet } from './Review';
 import { ClassifyPanel } from './ClassifyPanel';
 import { categoryLabel, orderedCategories, toggleCategory, toggleMarker } from '../lib/organisation';
 import { Portal } from './Portal';
+import { ReportDialog } from './ReportDialog';
 
 const PAGE = 100;
 
@@ -44,8 +45,10 @@ export function Records() {
     markDirty(keys);
   };
 
+  const [report, setReport] = useState(false);
   return (
     <div className="stack">
+      {report && <ReportDialog onClose={() => setReport(false)} />}
       <section className="panel stack">
         <div className="row">
           <h2 style={{ margin: 0 }}>Références</h2>
@@ -56,6 +59,9 @@ export function Records() {
           </label>
           <button className="btn small" onClick={() => download(`${safeFileName(p.name)}.csv`, recordsCsv(p), 'text/csv;charset=utf-8')}>
             Exporter CSV (Excel)
+          </button>
+          <button className="btn small primary" onClick={() => setReport(true)}>
+            Point d’étape (PDF)
           </button>
           <button className="btn small" onClick={() => exportProjectJson(p)}>
             Sauvegarder le projet (.json)

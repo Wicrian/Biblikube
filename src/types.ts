@@ -226,6 +226,8 @@ export interface Project {
   mode?: ReviewMode;
   /** Accueil et guide « Pour bien démarrer ». */
   guide?: GuideState;
+  /** Commentaire personnel ajouté au rapport « Point d'étape ». */
+  reportComment?: string;
   /** Labels importés de Rayyan (clé item -> labels), écrits dans Zotero en LF:rayyan:… */
   rayyanLabels: Record<string, string[]>;
   /** Raisons mémorisées, réutilisables d'un clic. */
