@@ -52,6 +52,17 @@ export interface StageDecision {
   at: string;
 }
 
+/** Une séance de travail : temps actif seulement (pause après 2 min sans geste). */
+export interface TimeSession {
+  /** Début et fin (dernier geste), en ISO. */
+  start: string;
+  end: string;
+  /** Temps actif en millisecondes. */
+  activeMs: number;
+  /** Temps actif par écran (tri, organisation…). */
+  views: Record<string, number>;
+}
+
 export type SourceKind = 'database' | 'register' | 'other';
 
 export interface SourceInfo {
@@ -228,6 +239,8 @@ export interface Project {
   guide?: GuideState;
   /** Commentaire personnel ajouté au rapport « Point d'étape ». */
   reportComment?: string;
+  /** Séances de travail mesurées dans l'application (minuterie). */
+  timeLog?: TimeSession[];
   /** Labels importés de Rayyan (clé item -> labels), écrits dans Zotero en LF:rayyan:… */
   rayyanLabels: Record<string, string[]>;
   /** Raisons mémorisées, réutilisables d'un clic. */

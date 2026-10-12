@@ -179,6 +179,8 @@ est jeune et peut encore changer ; la version 1.0 sera la première version « s
 **0.2 — octobre 2026**
 - LitFlow devient **Biblikube**, avec son logo (le cube, par Maude Leblanc-Côté). Les revues déjà commencées
   continuent de fonctionner.
+- **Minuterie et séances** : temps de travail actif (pause après 2 min sans geste), liste des séances, estimation des
+  séances passées d’après l’heure des décisions.
 - Démarrage guidé en 3 questions, menu adapté à votre usage et guide « Pour bien démarrer ».
 - « Point d’étape » en PDF pour faire le point avec sa direction, aux couleurs de l’ambiance.
 - Doublons plus faciles à départager (titre du livre, pages, ISBN, différences surlignées, notes) ; notes Zotero et
@@ -246,12 +248,12 @@ Le dossier `dist/` produit par `npm run build` peut aussi être déposé sur n�
 - [x] Import des décisions Rayyan ; type de chaque source (base de données / autre méthode)
 - [x] Version test séparée (/test/) avec ses propres données
 - [x] Logo
+- [x] Minuterie et séances de travail (temps actif, pause après 2 min sans geste)
 
 **À venir (prioritaire)**
 
 - [ ] Nouveau nom pour l’application (un autre projet s’appelle déjà Biblikube)
 - [ ] Recherche : profils Érudit et Cairn corrigés, vérification des équations avec des « articles témoins »
-- [ ] Compteur de temps de travail et de séances (temps actif seulement, pause après 2 min d’inactivité)
 - [ ] Écran « Bon retour » pour reprendre là où on s’était arrêté
 - [ ] Empêcher le changement de bibliothèque Zotero en cours de revue, ou « déménager » proprement la revue
 - [ ] Point d’étape exportable en Word

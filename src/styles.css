@@ -719,3 +719,14 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
 .demo-page .r1 { width: 90%; } .demo-page .r2 { width: 60%; animation-delay: 0.2s; } .demo-page .r3 { width: 75%; animation-delay: 0.4s; }
 .demo-page span { margin-top: auto; font-size: 0.8rem; animation: demo-stamp 3.2s ease-in-out infinite; }
 @keyframes demo-grow { 0%, 10% { transform: scaleX(0.1); } 45%, 100% { transform: scaleX(1); } }
+
+/* ---- Minuterie et séances ---- */
+.time-pill { cursor: pointer; font: inherit; font-size: 0.85rem; color: var(--text); }
+.time-pill:hover { background: var(--accent-soft); }
+.time-pill svg { color: var(--accent); }
+.sessions-tiles { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 700px) { .sessions-tiles { grid-template-columns: 1fr 1fr; } }
+.sessions-tiles .tile-value { font-size: 1.5rem; }
+.sessions-table th { cursor: default; }
+.sessions-table tr.estimated td { color: var(--muted); font-style: italic; }
+.sessions details ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }

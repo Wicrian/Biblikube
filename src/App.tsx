@@ -20,6 +20,7 @@ import { IS_TEST } from './lib/env';
 import { firstView, visibleViews, type ViewId } from './lib/guide';
 import { Onboarding } from './components/Onboarding';
 import { Guide } from './components/Guide';
+import { SessionsDialog, TimePill, useTimeTracker } from './components/TimeTracker';
 
 type View = ViewId;
 
@@ -155,6 +156,8 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
     project.mode ? (hasRecords ? (project.mode === 'organise' ? 'organisation' : 'screening') : 'import') : hasRecords ? 'screening' : project.library ? 'import' : 'protocol',
   );
   const [pulse, setPulse] = useState<View | null>(null);
+  const timeLog = useTimeTracker(view);
+  const [showSessions, setShowSessions] = useState(false);
   const setView = (v: View) => {
     setViewState(v);
     if (project.guide?.active && !project.guide.visited.includes(v))
@@ -254,6 +257,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
           <p className="muted hide-mobile">{v.subtitle}</p>
         </div>
         <span className="spacer" />
+        <TimePill log={timeLog} onOpen={() => setShowSessions(true)} />
         <span className="pill" title={syncStatus.message}>
           <span className={`sync-dot ${dotClass}`} /> <span className="hide-mobile">{syncLabel}</span>
         </span>
@@ -293,6 +297,13 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
         {view === 'records' && <Records />}
         {view === 'prisma' && <Prisma />}
       </main>
+      {showSessions && (
+        <SessionsDialog
+          log={timeLog}
+          labels={Object.fromEntries(Object.entries(VIEWS).map(([id, x]) => [id, x.label]))}
+          onClose={() => setShowSessions(false)}
+        />
+      )}
       {project.guide?.active && !project.guide.wizard && <Guide openDuplicates={dupOpen} onGo={go} />}
       {project.guide?.wizard && (
         <Onboarding
