@@ -245,11 +245,11 @@ svg.spin { animation: spin 1s linear infinite; }
 .rail-item:focus { outline: none; }
 .rail-item:focus-visible .rail-icon { box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow); }
 .logo {
-  width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
-  background: linear-gradient(140deg, var(--accent-2), var(--accent)); color: #fff;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 40%, transparent);
+  width: 60px; height: 60px; border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; background: none;
+  transition: transform 0.15s;
 }
-.logo svg { width: 28px; height: 28px; }
+.logo:hover { transform: rotate(-6deg) scale(1.05); }
+.logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(40, 30, 90, 0.18)); }
 .rail-item {
   border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
   padding: 0.15rem 0.2rem; width: 96px; color: var(--muted); position: relative;

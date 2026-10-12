@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ClipboardList, Compass, Copy, FileText, GitFork, Home as HomeIcon, Layers, LayoutGrid, Library, Minus, Palette, Plus, RefreshCw, Search, Settings as SettingsIcon, Sparkles, Table2 } from 'lucide-react';
+import { ClipboardList, Compass, Copy, FileText, GitFork, Home as HomeIcon, Layers, LayoutGrid, Library, Minus, Palette, Plus, RefreshCw, Search, Settings as SettingsIcon, Table2 } from 'lucide-react';
 import type { Project, Settings } from './types';
 import { deleteProject, listProjects, loadSettings, saveProject, saveSettings } from './lib/storage';
 import { ProjectProvider, useProject } from './store';
@@ -102,7 +102,7 @@ function Frame({ rail, children, onLogo }: { rail: ReactNode; children: ReactNod
       <div className="frame">
         <aside className="rail">
           <button className="logo" onClick={onLogo} title="LitFlow – accueil">
-            <Sparkles />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" />
           </button>
           {rail}
         </aside>
