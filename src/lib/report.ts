@@ -224,11 +224,12 @@ ${d.plan.keyArticles.length ? `<div class="card"><h2>Articles clés (marqués «
   const body = d.organiseFirst ? `${progress}${orgSection}${tail}${comment}` : `${progress}${tail}${orgSection}${comment}`;
 
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Point d’étape – ${esc(d.name)}</title><style>${fontCss}
-@page{size:Letter;margin:.45in .5in}
+@page{size:Letter;margin:.45in 0}
+@page :first{margin-top:0}
 *{box-sizing:border-box}
-body{margin:0;font-family:'Inter Variable',Inter,system-ui,sans-serif;color:${t.text};font-size:9.4pt;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.wrap{max-width:7.5in;margin:0 auto;padding:.3in 0}
-@media print{.wrap{padding:0}}
+body{margin:0;background:#fff linear-gradient(170deg,${t.soft} 0%,#fff 70%) no-repeat;background-size:100% 5in;font-family:'Inter Variable',Inter,system-ui,sans-serif;color:${t.text};font-size:9.4pt;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.wrap{max-width:8.5in;margin:0 auto;padding:.45in .5in .3in}
+@media print{.wrap{padding:.45in .5in 0}}
 .top{display:flex;align-items:center;gap:10px}
 .logo{width:28px;height:28px;border-radius:50%;background:${t.accent};color:#fff;display:grid;place-items:center;font-size:14px}
 .brand{font-family:'Outfit Variable',Outfit,'Inter Variable',Inter,sans-serif;font-weight:700;font-size:12pt}

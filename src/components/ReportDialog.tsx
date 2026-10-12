@@ -1,7 +1,7 @@
 // Rapport « Point d'étape » : aperçu, commentaire facultatif, puis
 // « Enregistrer en PDF » via la fenêtre d'impression du navigateur.
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FileDown, X } from 'lucide-react';
 import { reportData, reportHtml, type ReportTheme } from '../lib/report';
 import { loadTheme, THEMES } from '../lib/theme';
@@ -51,6 +51,12 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
   const theme = useMemo(currentTheme, []);
   const html = useMemo(() => reportHtml(reportData({ ...p, reportComment: comment }), theme, fonts), [p, comment, theme, fonts]);
 
+  // Coche « Faire un point d'étape » dans le guide.
+  useEffect(() => {
+    update((cur) => (cur.guide?.active && !cur.guide.visited.includes('report') ? { ...cur, guide: { ...cur.guide, visited: [...cur.guide.visited, 'report'] } } : cur));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const save = (c: string) => {
     setComment(c);
     update((cur) => ({ ...cur, reportComment: c }));
@@ -77,7 +83,7 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
               <textarea
                 rows={6}
                 value={comment}
-                placeholder="Ex. : Prochaine rencontre avec ma direction le 20 octobre. Questions : faut-il garder les rapports gouvernementaux ?"
+                placeholder="Ex. : Prochaine rencontre avec ma direction le 20 octobre. Question : faut-il garder les rapports gouvernementaux ?"
                 onChange={(e) => save(e.target.value)}
               />
               <span className="small muted">Il apparaît dans le rapport seulement s’il est rempli. Il est gardé avec la revue.</span>

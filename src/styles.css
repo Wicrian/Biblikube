@@ -658,7 +658,7 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
 .onb-chip { font-size: 0.72rem; font-weight: 600; border-radius: 999px; padding: 0.1rem 0.5rem; background: var(--inset); color: var(--muted); opacity: 0.55; }
 .onb-chip.on { background: var(--accent-soft); color: var(--accent); opacity: 1; }
 @media (max-width: 640px) { .onb-chips { display: none; } .onb-title { font-size: 1.5rem; } }
-.onb-demos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.9rem; }
+.onb-demos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.9rem; }
 .onb-demo { display: flex; flex-direction: column; gap: 0.3rem; }
 .demo-stage { position: relative; height: 130px; border-radius: 16px; background: var(--inset); overflow: hidden; margin-bottom: 0.3rem; }
 .demo-tag { position: absolute; top: 8px; left: 8px; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; background: var(--panel-solid); color: var(--muted); border-radius: 999px; padding: 0.05rem 0.45rem; z-index: 2; }
@@ -712,3 +712,10 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
 .report-side { overflow-y: auto; }
 .report-frame { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 16px; background: #fff; }
 @media (max-width: 860px) { .report-dialog { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } }
+
+.demo-page { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); width: 74px; height: 100px; border-radius: 8px; background: linear-gradient(170deg, var(--accent-soft), var(--panel-solid) 60%); box-shadow: var(--shadow); padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; }
+.demo-page b { display: block; height: 7px; width: 60%; border-radius: 4px; background: var(--text); opacity: 0.7; }
+.demo-page i { display: block; height: 6px; border-radius: 3px; background: var(--accent); transform-origin: left; animation: demo-grow 3.2s ease-in-out infinite; }
+.demo-page .r1 { width: 90%; } .demo-page .r2 { width: 60%; animation-delay: 0.2s; } .demo-page .r3 { width: 75%; animation-delay: 0.4s; }
+.demo-page span { margin-top: auto; font-size: 0.8rem; animation: demo-stamp 3.2s ease-in-out infinite; }
+@keyframes demo-grow { 0%, 10% { transform: scaleX(0.1); } 45%, 100% { transform: scaleX(1); } }

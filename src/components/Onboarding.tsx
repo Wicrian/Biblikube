@@ -95,11 +95,12 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
         {step === 'preview' && (
           <>
             <h1 className="onb-title">Voici ce qui vous attend</h1>
-            <p className="muted">Trois gestes à connaître. Ce sont des exemples : vos vrais articles vous attendent juste après.</p>
+            <p className="muted">Quelques gestes à connaître. Ce sont des exemples : vos vrais articles vous attendent juste après.</p>
             <div className="onb-demos">
               <Demo kind="dedup" title="Doublons" text="Choisissez la notice à garder : celle qui a vos notes est proposée." />
               {mode !== 'organise' && <Demo kind="swipe" title="Tri" text="Glissez la carte : → garder, ← écarter, ↑ incertain." />}
               <Demo kind="circle" title="Organisation" text="Glissez chaque article vers une bulle de votre plan." />
+              <Demo kind="report" title="Point d’étape" text="Un PDF pour montrer où vous en êtes, avec votre commentaire." />
             </div>
             <div className="row">
               <button className="btn small" onClick={() => setStep('zotero')}>
@@ -118,7 +119,7 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
 }
 
 /** Petite animation qui montre un geste (marquée « Exemple »). */
-function Demo({ kind, title, text }: { kind: 'swipe' | 'dedup' | 'circle'; title: string; text: string }) {
+function Demo({ kind, title, text }: { kind: 'swipe' | 'dedup' | 'circle' | 'report'; title: string; text: string }) {
   return (
     <div className="onb-demo">
       <div className={`demo-stage demo-${kind}`} aria-hidden>
@@ -145,6 +146,15 @@ function Demo({ kind, title, text }: { kind: 'swipe' | 'dedup' | 'circle'; title
               <i className="short" />
             </div>
           </>
+        )}
+        {kind === 'report' && (
+          <div className="demo-page">
+            <b />
+            <i className="r1" />
+            <i className="r2" />
+            <i className="r3" />
+            <span>💬</span>
+          </div>
         )}
         {kind === 'circle' && (
           <>

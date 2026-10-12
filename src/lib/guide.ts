@@ -55,6 +55,13 @@ export function guideSteps(p: Project, openDuplicates: number): GuideStep[] {
     add({ id: 'fulltext', label: 'Évaluer un premier texte intégral', hint: 'Lisez dans Zotero, décidez ici.', view: 'fulltext', done: Object.keys(p.fulltext).length > 0 });
   add({ id: 'plan', label: 'Choisir comment ranger vos articles', hint: 'Un plan proposé, le vôtre, ou plus tard.', view: 'organisation', done: !!p.organisation.name });
   add({ id: 'classify', label: 'Classer 5 articles', hint: 'Glissez chaque carte vers une bulle.', view: 'organisation', done: classified >= 5 });
+  add({
+    id: 'report',
+    label: 'Faire un point d’étape (PDF)',
+    hint: 'Pour montrer où vous en êtes, avec un commentaire. Ex. : « Prochaine rencontre avec ma direction le 20 octobre. Question : faut-il garder les rapports gouvernementaux ? »',
+    view: 'records',
+    done: visited.includes('report'),
+  });
   if (mode === 'systematic')
     add({ id: 'prisma', label: 'Découvrir votre diagramme PRISMA', hint: 'Il se remplit tout seul.', view: 'prisma', done: visited.includes('prisma') });
   return steps;

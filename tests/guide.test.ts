@@ -22,6 +22,7 @@ describe('parcours et guide', () => {
       ['screen', false],
       ['plan', false],
       ['classify', false],
+      ['report', false],
     ]);
     expect(guideSteps(p, 0).find((s) => s.id === 'dedup')!.done).toBe(true);
   });
