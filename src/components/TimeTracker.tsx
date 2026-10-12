@@ -4,19 +4,25 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Timer, X } from 'lucide-react';
 import { useProject } from '../store';
 import { saveProject } from '../lib/storage';
-import { formatDuration, recordActivity, recordWork, sessionRows, summarize } from '../lib/timeLog';
+import { IDLE_MS, formatDuration, recordActivity, recordReturn, recordWork, sessionRows, summarize, totalDecisions } from '../lib/timeLog';
 import type { TimeSession } from '../types';
 import { Portal } from './Portal';
 
 /** Enregistre ce délai au plus tard (et à chaque changement d'écran ou de fenêtre). */
 const FLUSH_MS = 5 * 60_000;
 
-/** Suit les gestes de la personne et renvoie les séances à jour. */
-export function useTimeTracker(view: string): TimeSession[] {
+/**
+ * Suit les gestes de la personne et renvoie les séances à jour.
+ * `sorting` : on est sur le tri ou le texte intégral et il reste des articles à trier
+ * (hésiter devant un article, c'est déjà travailler).
+ */
+export function useTimeTracker(view: string, sorting: boolean): TimeSession[] {
   const { project, update } = useProject();
   const log = useRef<TimeSession[]>(project.timeLog ?? []);
   const saved = useRef(log.current);
   const viewRef = useRef(view);
+  const sortingRef = useRef(sorting);
+  sortingRef.current = sorting;
   const projectRef = useRef(project);
   projectRef.current = project;
   const [live, setLive] = useState(log.current);
@@ -39,6 +45,9 @@ export function useTimeTracker(view: string): TimeSession[] {
       void saveProject({ ...projectRef.current, timeLog: next });
     };
     let lastMove = 0;
+    // Début du passage actuel sur un tri en cours : un simple clic de passage ne compte pas,
+    // il faut y rester au moins 15 secondes.
+    let sortingSince: { view: string; start: number; last: number } | null = null;
     const onActivity = (e: Event) => {
       if (document.visibilityState !== 'visible') return;
       const now = Date.now();
@@ -46,12 +55,15 @@ export function useTimeTracker(view: string): TimeSession[] {
         if (now - lastMove < 10_000) return;
         lastMove = now;
       }
-      log.current = recordActivity(log.current, now, viewRef.current);
       // Écrire dans un champ (protocole, note, commentaire), c'est travailler.
       const t = e.target as HTMLElement | null;
-      if (e.type === 'keydown' && t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) {
-        log.current = recordWork(log.current, now, viewRef.current);
-      }
+      const writing = e.type === 'keydown' && !!t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable);
+      if (!sortingRef.current) sortingSince = null;
+      else if (!sortingSince || sortingSince.view !== viewRef.current || now - sortingSince.last > IDLE_MS)
+        sortingSince = { view: viewRef.current, start: now, last: now };
+      else sortingSince.last = now;
+      const hesitating = !!sortingSince && now - sortingSince.start >= 15_000;
+      log.current = (hesitating || writing ? recordWork : recordActivity)(log.current, now, viewRef.current);
     };
     const onWork = () => {
       if (document.visibilityState !== 'visible') return;
@@ -61,8 +73,22 @@ export function useTimeTracker(view: string): TimeSession[] {
     window.addEventListener('biblikube:work', onWork);
     const events = ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll'];
     events.forEach((t) => window.addEventListener(t, onActivity, { passive: true, capture: true }));
-    const onHide = () => document.visibilityState === 'hidden' && flush();
-    document.addEventListener('visibilitychange', onHide);
+    // Autre onglet ou autre application : si l'on revient dans les 15 minutes, ce temps compte.
+    let leftAt: number | null = null;
+    const leave = () => {
+      if (leftAt === null) leftAt = Date.now();
+      flush();
+    };
+    const back = () => {
+      if (leftAt === null || document.visibilityState !== 'visible') return;
+      log.current = recordReturn(log.current, leftAt, Date.now(), viewRef.current);
+      leftAt = null;
+      setLive(log.current);
+    };
+    const onVisibility = () => (document.visibilityState === 'hidden' ? leave() : back());
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('blur', leave);
+    window.addEventListener('focus', back);
     window.addEventListener('pagehide', flush);
     const tick = setInterval(() => setLive(log.current), 30_000);
     const save = setInterval(flush, FLUSH_MS);
@@ -72,7 +98,9 @@ export function useTimeTracker(view: string): TimeSession[] {
     return () => {
       events.forEach((t) => window.removeEventListener(t, onActivity, { capture: true }));
       window.removeEventListener('biblikube:work', onWork);
-      document.removeEventListener('visibilitychange', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('blur', leave);
+      window.removeEventListener('focus', back);
       window.removeEventListener('pagehide', flush);
       clearInterval(tick);
       clearInterval(save);
@@ -119,6 +147,9 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
   const s = summarize(rows);
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.slice(0, 8);
+  const stages = Object.entries(s.byView)
+    .filter(([, ms]) => ms >= 30_000)
+    .sort((a, b) => b[1] - a[1]);
   const mainView = (v: Record<string, number>) => {
     const top = Object.entries(v).sort((a, b) => b[1] - a[1])[0];
     return top ? labels[top[0]] ?? '' : '';
@@ -129,7 +160,10 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
       <div className="overlay" onClick={onClose}>
         <div className="modal stack sessions" onClick={(e) => e.stopPropagation()}>
           <div className="row">
-            <h2 style={{ margin: 0 }}>Mes séances</h2>
+            <div>
+              <h2 style={{ margin: 0 }}>Mes séances</h2>
+              <div className="small muted">Le temps passé dans Biblikube pour cette revue</div>
+            </div>
             <span className="spacer" />
             <button className="btn small" onClick={onClose} title="Fermer">
               <X size={15} />
@@ -152,9 +186,27 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
             <div className="tile t2">
               <div className="tile-label">Séances</div>
               <div className="tile-value">{s.sessions}</div>
-              {s.perHour !== null && <div className="small muted">≈ {s.perHour} décisions à l’heure</div>}
             </div>
           </div>
+
+          {stages.length > 0 && (
+            <div className="sessions-stages">
+              <div className="small muted">Par étape</div>
+              {stages.map(([v, ms]) => {
+                const st = v === 'screening' || v === 'fulltext' ? s[v] : null;
+                return (
+                  <div key={v} className="sessions-stage">
+                    <strong>{labels[v] ?? v}</strong>
+                    <span>{formatDuration(ms)}</span>
+                    <span className="muted small">
+                      {st && st.decisions > 0 && `${st.decisions} décision${st.decisions > 1 ? 's' : ''}`}
+                      {st?.perHour != null && ` · rythme : ≈ ${st.perHour} décisions par heure`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {rows.length === 0 ? (
             <p className="muted">Aucune séance pour l’instant : le compteur démarre dès que vous travaillez sur cette revue.</p>
@@ -181,8 +233,8 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
                         {hour(r.start)} – {hour(r.end)}
                       </td>
                       <td>{formatDuration(r.activeMs)}</td>
-                      <td>{r.decisions || '—'}</td>
-                      <td className="hide-mobile">{r.estimated ? 'Tri' : mainView(r.views) || '—'}</td>
+                      <td>{totalDecisions(r) || '—'}</td>
+                      <td className="hide-mobile">{mainView(r.views) || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -198,9 +250,23 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
           <details className="small muted">
             <summary>Comment le temps est-il compté ?</summary>
             <ul>
-              <li>Seul le temps où vous utilisez Biblikube compte. Après 2 minutes sans geste (clic, touche, défilement), le compteur se met en pause.</li>
-              <li>Une séance ne compte que si vous y travaillez (décision, classement, note, texte écrit) et s’arrête à votre dernier travail : revenir simplement regarder une revue ne compte pas.</li>
+              <li>
+                Chaque geste compte (clic, touche, défilement, souris) : hésiter devant un article fait partie du travail. Après 2
+                minutes sans aucun geste, le compteur se met en pause.
+              </li>
+              <li>
+                Si vous allez dans un autre onglet ou une autre application (par exemple Zotero) et revenez dans les 15 minutes, ce
+                temps compte. Sinon, il ne compte pas.
+              </li>
+              <li>
+                Une séance ne compte que si vous y travaillez : une décision, un classement, une note, du texte écrit, ou du temps sur
+                le tri ou le texte intégral alors qu’il reste des articles à trier. Revenir regarder une revue terminée ne compte pas.
+              </li>
               <li>Une nouvelle séance commence après 30 minutes d’absence.</li>
+              <li>
+                Les décisions comptent par étape : un article inclus au tri puis décidé au texte intégral compte une fois dans chaque
+                étape. Les doublons écartés ne comptent pas.
+              </li>
               <li>
                 Les séances « estimées » sont reconstituées d’après l’heure de vos décisions de tri, avant l’arrivée de la minuterie :
                 c’est une approximation (le temps de lecture avant la première décision n’est pas connu, et les décisions importées

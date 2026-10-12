@@ -730,3 +730,6 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
 .sessions-table th { cursor: default; }
 .sessions-table tr.estimated td { color: var(--muted); font-style: italic; }
 .sessions details ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+.sessions-stages { display: grid; gap: 0.35rem; }
+.sessions-stage { display: grid; grid-template-columns: 11rem 5rem 1fr; gap: 0.6rem; align-items: baseline; padding: 0.45rem 0.8rem; border-radius: var(--radius); background: var(--panel-strong); }
+@media (max-width: 700px) { .sessions-stage { grid-template-columns: 1fr auto; } .sessions-stage > :last-child { grid-column: 1 / -1; } }

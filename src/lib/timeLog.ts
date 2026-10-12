@@ -1,59 +1,89 @@
-// Minuterie et séances de travail.
+// Minuterie et séances de travail : le « temps passé dans Biblikube ».
 //
-// Seul le temps « actif » compte : chaque geste (clic, touche, défilement…)
-// prolonge la séance ; après 2 minutes sans geste, le compteur se met en pause.
-// Après 30 minutes d'absence, le geste suivant ouvre une nouvelle séance.
-// Une séance ne compte que s'il s'y passe du vrai travail (décision, classement,
-// note, texte saisi), et s'arrête au dernier travail : revenir simplement
-// regarder une revue terminée ne compte pas. Rien n'est envoyé ailleurs : les séances
-// sont gardées avec la revue (navigateur + sauvegarde Zotero).
+// Règles (en français simple, reprises dans la fenêtre « Mes séances ») :
+// - Chaque geste (clic, touche, défilement, souris) compte : hésiter devant un
+//   article fait partie du travail. Après 2 minutes sans geste, pause.
+// - Changer d'onglet ou d'application : si l'on revient dans les 15 minutes,
+//   le temps passé ailleurs compte (lecture du PDF, vérification…) ; sinon non.
+// - Après 30 minutes d'absence, une nouvelle séance commence.
+// - Une séance ne compte que s'il s'y passe du travail : une décision, un
+//   classement, une note, du texte écrit, ou du temps passé sur le tri ou le
+//   texte intégral alors qu'il reste des articles à trier. Revenir regarder une
+//   revue terminée ne compte pas.
+// Rien n'est envoyé ailleurs : les séances sont gardées avec la revue
+// (navigateur + sauvegarde Zotero).
 import type { Project, TimeSession } from '../types';
 
 export const IDLE_MS = 2 * 60_000;
+export const AWAY_MAX_MS = 15 * 60_000;
 export const SESSION_GAP_MS = 30 * 60_000;
+
+function extend(last: TimeSession, now: number, counted: number, view: string): TimeSession {
+  return {
+    ...last,
+    end: new Date(now).toISOString(),
+    activeMs: last.activeMs + counted,
+    views: counted ? { ...last.views, [view]: (last.views[view] ?? 0) + counted } : last.views,
+  };
+}
 
 /** Enregistre un geste fait à l'instant `now` sur l'écran `view`. */
 export function recordActivity(log: TimeSession[], now: number, view: string): TimeSession[] {
   const last = log[log.length - 1];
-  const iso = new Date(now).toISOString();
   if (!last || now - Date.parse(last.end) > SESSION_GAP_MS) {
+    const iso = new Date(now).toISOString();
     return [...log, { start: iso, end: iso, activeMs: 0, views: {} }];
   }
   const delta = now - Date.parse(last.end);
   if (delta < 0) return log;
-  const counted = delta <= IDLE_MS ? delta : 0;
-  const next: TimeSession = {
-    ...last,
-    end: iso,
-    activeMs: last.activeMs + counted,
-    views: counted ? { ...last.views, [view]: (last.views[view] ?? 0) + counted } : last.views,
-  };
-  return [...log.slice(0, -1), next];
+  return [...log.slice(0, -1), extend(last, now, delta <= IDLE_MS ? delta : 0, view)];
 }
 
-/** Enregistre un vrai travail (décision, classement, note, texte saisi). */
+/** Enregistre un geste qui est du travail : la séance comptera. */
 export function recordWork(log: TimeSession[], now: number, view: string): TimeSession[] {
   const next = recordActivity(log, now, view);
   const last = next[next.length - 1];
-  return [...next.slice(0, -1), { ...last, lastWork: last.end, workMs: last.activeMs }];
+  return [...next.slice(0, -1), { ...last, lastWork: last.end }];
 }
+
+/**
+ * Retour dans Biblikube après être allé dans un autre onglet ou une autre
+ * application (`leftAt` : moment du départ). Si l'on était actif juste avant de
+ * partir et que l'absence a duré au plus 15 minutes, ce temps compte.
+ */
+export function recordReturn(log: TimeSession[], leftAt: number, now: number, view: string): TimeSession[] {
+  const last = log[log.length - 1];
+  if (!last) return log;
+  const lastEnd = Date.parse(last.end);
+  if (leftAt - lastEnd > IDLE_MS || now - leftAt > AWAY_MAX_MS || now < lastEnd) return log;
+  return [...log.slice(0, -1), extend(last, now, now - lastEnd, view)];
+}
+
+export type Stage = 'screening' | 'fulltext';
 
 /** Une séance affichable : mesurée, ou estimée d'après les dates des décisions. */
 export interface SessionRow {
   start: number;
   end: number;
   activeMs: number;
-  decisions: number;
+  /** Décisions prises pendant la séance, par étape. */
+  decisions: Record<Stage, number>;
   views: Record<string, number>;
   estimated: boolean;
 }
 
-/** Dates (ms) des décisions de tri et de texte intégral. */
-function decisionTimes(p: Project): number[] {
-  return [...Object.values(p.screening), ...Object.values(p.fulltext)]
-    .map((d) => Date.parse(d?.at ?? ''))
-    .filter((t) => Number.isFinite(t))
-    .sort((a, b) => a - b);
+export const totalDecisions = (r: SessionRow) => r.decisions.screening + r.decisions.fulltext;
+
+/** Dates des décisions de tri et de texte intégral (références encore dans la revue, hors doublons). */
+function decisionTimes(p: Project): { t: number; stage: Stage }[] {
+  const out: { t: number; stage: Stage }[] = [];
+  for (const stage of ['screening', 'fulltext'] as const)
+    for (const [key, d] of Object.entries(p[stage])) {
+      if (!p.records[key] || key in p.duplicates) continue;
+      const t = Date.parse(d?.at ?? '');
+      if (Number.isFinite(t)) out.push({ t, stage });
+    }
+  return out.sort((a, b) => a.t - b.t);
 }
 
 /**
@@ -61,16 +91,16 @@ function decisionTimes(p: Project): number[] {
  * dans Zotero) : 5 décisions ou plus à moins de 1,5 s d'intervalle ne sont pas
  * des gestes faits à la main.
  */
-export function withoutBursts(times: number[]): number[] {
-  const out: number[] = [];
-  let run: number[] = [];
+export function withoutBursts<T extends { t: number }>(items: T[]): T[] {
+  const out: T[] = [];
+  let run: T[] = [];
   const flush = () => {
     if (run.length < 5) out.push(...run);
     run = [];
   };
-  for (const t of times) {
-    if (run.length && t - run[run.length - 1] >= 1500) flush();
-    run.push(t);
+  for (const it of items) {
+    if (run.length && it.t - run[run.length - 1].t >= 1500) flush();
+    run.push(it);
   }
   flush();
   return out;
@@ -82,38 +112,47 @@ export function withoutBursts(times: number[]): number[] {
  * entre deux décisions (le temps de lecture avant la première n'est pas connu).
  */
 export function estimatePast(p: Project, before = Infinity): SessionRow[] {
-  const times = withoutBursts(decisionTimes(p)).filter((t) => t < before);
+  const items = withoutBursts(decisionTimes(p)).filter((d) => d.t < before);
   const rows: SessionRow[] = [];
-  for (const t of times) {
-    const cur = rows[rows.length - 1];
+  for (const { t, stage } of items) {
+    let cur = rows[rows.length - 1];
     if (!cur || t - cur.end > SESSION_GAP_MS) {
-      rows.push({ start: t, end: t, activeMs: 0, decisions: 1, views: {}, estimated: true });
-      continue;
+      cur = { start: t, end: t, activeMs: 0, decisions: { screening: 0, fulltext: 0 }, views: {}, estimated: true };
+      rows.push(cur);
+    } else {
+      const gap = t - cur.end;
+      if (gap <= 5 * 60_000) {
+        cur.activeMs += gap;
+        cur.views[stage] = (cur.views[stage] ?? 0) + gap;
+      }
+      cur.end = t;
     }
-    const gap = t - cur.end;
-    if (gap <= 5 * 60_000) cur.activeMs += gap;
-    cur.end = t;
-    cur.decisions++;
+    cur.decisions[stage]++;
   }
   // Une séance d'une seule décision compte pour une minute.
-  for (const r of rows) if (!r.activeMs) r.activeMs = 60_000;
+  for (const r of rows)
+    if (!r.activeMs) {
+      r.activeMs = 60_000;
+      r.views = { [r.decisions.fulltext > r.decisions.screening ? 'fulltext' : 'screening']: 60_000 };
+    }
   return rows;
 }
 
-/** Toutes les séances, de la plus récente à la plus ancienne. */
+/** Toutes les séances qui comptent, de la plus récente à la plus ancienne. */
 export function sessionRows(p: Project, log: TimeSession[] = p.timeLog ?? []): SessionRow[] {
-  const times = decisionTimes(p);
+  const items = decisionTimes(p);
   const measured: SessionRow[] = log
     .map((s) => {
       const start = Date.parse(s.start);
-      const end = Date.parse(s.lastWork ?? s.end);
-      const activeMs = s.workMs ?? s.activeMs;
-      return { start, end, activeMs, views: s.views, estimated: false, decisions: times.filter((t) => t >= start && t <= end).length, worked: !!s.lastWork };
+      const end = Date.parse(s.end);
+      const decisions = { screening: 0, fulltext: 0 };
+      for (const d of items) if (d.t >= start && d.t <= end) decisions[d.stage]++;
+      return { row: { start, end, activeMs: s.activeMs, views: s.views, estimated: false, decisions }, worked: !!s.lastWork };
     })
-    // Séances sans travail (on est juste venu regarder) : ignorées. Les séances
-    // enregistrées avant ce suivi du travail comptent si elles contiennent des décisions.
-    .filter((r) => r.worked || r.decisions > 0)
-    .map(({ worked: _, ...r }) => r);
+    // Simple visite (aucun travail) : ignorée. Les séances enregistrées avant ce
+    // suivi du travail comptent si elles contiennent des décisions.
+    .filter(({ row, worked }) => row.activeMs > 0 && (worked || totalDecisions(row) > 0))
+    .map(({ row }) => row);
   const firstMeasured = log.length ? Date.parse(log[0].start) : Infinity;
   return [...estimatePast(p, firstMeasured), ...measured].sort((a, b) => b.start - a.start);
 }
@@ -124,30 +163,45 @@ const startOfDay = (now: number) => {
   return d.getTime();
 };
 
+export interface StageSummary {
+  ms: number;
+  decisions: number;
+  /** Décisions par heure (null si moins de 10 minutes ou aucune décision). */
+  perHour: number | null;
+}
+
 export interface TimeSummary {
   todayMs: number;
   weekMs: number;
   totalMs: number;
   estimatedMs: number;
   sessions: number;
-  /** Décisions par heure, sur les séances mesurées (null si trop peu de données). */
-  perHour: number | null;
+  /** Temps par écran (tri, texte intégral, organisation…), toutes séances confondues. */
+  byView: Record<string, number>;
+  screening: StageSummary;
+  fulltext: StageSummary;
 }
 
 export function summarize(rows: SessionRow[], now = Date.now()): TimeSummary {
   const today = startOfDay(now);
   const week = startOfDay(now - 6 * 86_400_000);
   const sum = (f: (r: SessionRow) => boolean) => rows.filter(f).reduce((a, r) => a + r.activeMs, 0);
-  const measured = rows.filter((r) => !r.estimated);
-  const mMs = measured.reduce((a, r) => a + r.activeMs, 0);
-  const mDec = measured.reduce((a, r) => a + r.decisions, 0);
+  const byView: Record<string, number> = {};
+  for (const r of rows) for (const [v, ms] of Object.entries(r.views)) byView[v] = (byView[v] ?? 0) + ms;
+  const stage = (s: Stage): StageSummary => {
+    const ms = byView[s] ?? 0;
+    const decisions = rows.reduce((a, r) => a + r.decisions[s], 0);
+    return { ms, decisions, perHour: ms >= 10 * 60_000 && decisions ? Math.round(decisions / (ms / 3_600_000)) : null };
+  };
   return {
     todayMs: sum((r) => r.end >= today),
     weekMs: sum((r) => r.end >= week),
     totalMs: sum(() => true),
     estimatedMs: sum((r) => r.estimated),
     sessions: rows.length,
-    perHour: mMs >= 10 * 60_000 && mDec ? Math.round(mDec / (mMs / 3_600_000)) : null,
+    byView,
+    screening: stage('screening'),
+    fulltext: stage('fulltext'),
   };
 }
 

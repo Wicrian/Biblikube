@@ -61,9 +61,8 @@ export interface TimeSession {
   activeMs: number;
   /** Temps actif par écran (tri, organisation…). */
   views: Record<string, number>;
-  /** Dernier vrai travail (décision, classement, note, texte saisi) et temps actif à ce moment-là. */
+  /** Dernier travail (décision, classement, note, texte écrit, tri en cours) : la séance compte. */
   lastWork?: string;
-  workMs?: number;
 }
 
 export type SourceKind = 'database' | 'register' | 'other';

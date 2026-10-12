@@ -156,7 +156,10 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
     project.mode ? (hasRecords ? (project.mode === 'organise' ? 'organisation' : 'screening') : 'import') : hasRecords ? 'screening' : project.library ? 'import' : 'protocol',
   );
   const [pulse, setPulse] = useState<View | null>(null);
-  const timeLog = useTimeTracker(view);
+  const sortingLeft =
+    (view === 'screening' && screeningKeys(project).some((k) => !project.screening[k])) ||
+    (view === 'fulltext' && fulltextKeys(project).some((k) => !project.fulltext[k] && !(k in project.notRetrieved)));
+  const timeLog = useTimeTracker(view, sortingLeft);
   const [showSessions, setShowSessions] = useState(false);
   const setView = (v: View) => {
     setViewState(v);
