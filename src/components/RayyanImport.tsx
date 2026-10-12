@@ -171,7 +171,7 @@ export function RayyanImport() {
           </label>
           <label className="row small">
             <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
-            Remplacer les décisions déjà prises dans LitFlow
+            Remplacer les décisions déjà prises dans Biblikube
             {plan.skippedExisting > 0 && !overwrite && <span className="muted"> ({plan.skippedExisting} gardée(s) telles quelles)</span>}
           </label>
 

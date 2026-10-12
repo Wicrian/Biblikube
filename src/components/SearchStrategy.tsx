@@ -204,7 +204,7 @@ function Databases({ s, set }: { s: SearchState; set: SetSearch }) {
     <section className="panel stack">
       <h2 style={{ margin: 0 }}>2. L’équation dans chaque base</h2>
       <p className="small muted">
-        Choisissez vos bases : LitFlow traduit l’équation dans leur syntaxe et explique comment la saisir, en un seul
+        Choisissez vos bases : Biblikube traduit l’équation dans leur syntaxe et explique comment la saisir, en un seul
         copier-coller ou ligne par ligne dans le formulaire de recherche avancée. Vous pouvez modifier chaque équation :
         votre version est enregistrée.
       </p>

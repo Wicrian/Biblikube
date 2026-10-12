@@ -1,5 +1,5 @@
 // Lecture des notes et surlignages Zotero d'une référence, pour les afficher
-// dans LitFlow (lecture seule : rien n'est modifié dans Zotero).
+// dans Biblikube (lecture seule : rien n'est modifié dans Zotero).
 
 import type { ZItem } from '../zotero/api';
 
@@ -39,10 +39,10 @@ export function htmlToText(html: string): string {
     .trim();
 }
 
-/** Notes rédigées par la personne (on écarte la note générée par LitFlow). */
+/** Notes rédigées par la personne (on écarte la note générée par Biblikube). */
 export function userNotes(children: ZItem[], litflowNoteKey?: string): UserNote[] {
   return children
-    .filter((c) => c.data.itemType === 'note' && c.key !== litflowNoteKey && !/^\s*<h2>LitFlow – /.test(c.data.note ?? ''))
+    .filter((c) => c.data.itemType === 'note' && c.key !== litflowNoteKey && !/^\s*<h2>(Biblikube|LitFlow) – /.test(c.data.note ?? ''))
     .map((c) => ({ key: c.key, text: htmlToText(c.data.note ?? ''), modified: String(c.data.dateModified ?? '') }))
     .filter((n) => n.text);
 }

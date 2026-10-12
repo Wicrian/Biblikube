@@ -69,12 +69,12 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
             <h1 className="onb-title">Où sont vos articles ?</h1>
             {!settings.apiKey ? (
               <div className="stack">
-                <p className="muted">LitFlow lit vos articles directement dans Zotero. Il faut d’abord le relier, une seule fois.</p>
+                <p className="muted">Biblikube lit vos articles directement dans Zotero. Il faut d’abord le relier, une seule fois.</p>
                 <div className="row">
                   <button className="btn primary" onClick={onSettings}>
                     Connecter mon Zotero
                   </button>
-                  <span className="small muted">Une fenêtre vous guide pour créer votre clé (nom conseillé : « LitFlow »).</span>
+                  <span className="small muted">Une fenêtre vous guide pour créer votre clé (nom conseillé : « Biblikube »).</span>
                 </div>
               </div>
             ) : (

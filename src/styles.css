@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LitFlow – feuille de style
+   Biblikube – feuille de style
    Une base commune (mise en page, formes) + des thèmes de couleurs.
    Pour créer un thème : copier le bloc [data-theme='innovation'] et changer
    les couleurs. Rien d'autre à toucher.
@@ -607,7 +607,7 @@ details > summary::-webkit-details-marker { display: none; }
 .lines li { margin-bottom: 0.6rem; }
 .line-text { display: block; flex: 1; font-size: 0.82rem; word-break: break-word; white-space: pre-wrap; padding: 0.4rem 0.55rem; }
 
-/* ---- Notes Zotero affichées dans LitFlow ---- */
+/* ---- Notes Zotero affichées dans Biblikube ---- */
 .znotes { display: flex; flex-direction: column; gap: 0.4rem; text-align: left; }
 .znotes.small, div.znotes.muted { flex-direction: row; align-items: center; gap: 0.35rem; }
 .znotes-head { display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid var(--border); background: var(--panel-strong); border-radius: 999px; padding: 0.35rem 0.8rem; cursor: pointer; color: var(--text); font: inherit; font-size: 0.85rem; align-self: flex-start; }

@@ -1,5 +1,5 @@
 // « Mes notes » : les notes et surlignages Zotero d'une référence, affichés
-// dans LitFlow pour décider sans faire d'allers-retours. Lecture seule.
+// dans Biblikube pour décider sans faire d'allers-retours. Lecture seule.
 
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, Highlighter, NotebookPen } from 'lucide-react';

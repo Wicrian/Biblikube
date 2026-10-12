@@ -30,11 +30,11 @@ export function Home({ projects, settings, onOpen, onDelete, onSettings, onTheme
         <div className="eyebrow">Revue de littérature libre et gratuite</div>
         <h1>Bonjour 👋 Prêt·e à trier ?</h1>
         <p className="muted">
-          LitFlow est directement connecté à votre bibliothèque Zotero. Vos titres, résumés et PDF restent dans Zotero :
+          Biblikube est directement connecté à votre bibliothèque Zotero. Vos titres, résumés et PDF restent dans Zotero :
           rien n’est importé, tout est synchronisé.
         </p>
         <p className="muted small">
-          LitFlow ne supprime jamais vos références ni vos propres étiquettes ou collections : il ajoute seulement des
+          Biblikube ne supprime jamais vos références ni vos propres étiquettes ou collections : il ajoute seulement des
           collections, des étiquettes « LF: » et des notes pour trier et organiser.
         </p>
         </div>

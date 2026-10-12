@@ -1,6 +1,6 @@
-// Modèle de données de LitFlow.
+// Modèle de données de Biblikube.
 // Les métadonnées des références viennent de Zotero et ne sont JAMAIS réécrites :
-// LitFlow ne modifie dans Zotero que les collections, les étiquettes (tags) et
+// Biblikube ne modifie dans Zotero que les collections, les étiquettes (tags) et
 // ses propres notes. Les titres, résumés et accents restent intacts.
 
 export type Decision = 'include' | 'exclude' | 'maybe';
@@ -31,7 +31,7 @@ export interface RecordItem {
   /** Nombre de pages calculé à partir du champ « pages » ou « numPages ». */
   pageCount: number | null;
   zoteroTags: string[];
-  /** Clés de toutes les collections Zotero de l'item (y compris celles de LitFlow). */
+  /** Clés de toutes les collections Zotero de l'item (y compris celles de Biblikube). */
   collections: string[];
   /** Nom(s) de la ou des sources d'identification (sous-collections : PubMed, Scopus…). */
   sources: string[];
@@ -118,7 +118,7 @@ export interface Marker {
 export interface Organisation {
   /** Nom du plan (ex. « Sections du mémoire ») ; vide tant qu'aucun plan n'est créé. */
   name: string;
-  /** « litflow » : collection créée dans « LitFlow – projet » ; « existing » : collection Zotero existante. */
+  /** « litflow » : collection créée dans « Biblikube – projet » ; « existing » : collection Zotero existante. */
   rootMode: 'litflow' | 'existing';
   rootKey: string | null;
   categories: Category[];
@@ -203,9 +203,9 @@ export interface Project {
   /** Collection Zotero contenant les résultats de recherche (sous-collections = sources). */
   sourceCollection: { key: string; name: string } | null;
   sources: SourceInfo[];
-  /** Collections créées par LitFlow dans Zotero (clé logique -> clé Zotero). */
+  /** Collections créées par Biblikube dans Zotero (clé logique -> clé Zotero). */
   zoteroCollections: Record<string, string>;
-  /** Notes Zotero créées par LitFlow (clé item -> clé note). */
+  /** Notes Zotero créées par Biblikube (clé item -> clé note). */
   zoteroNotes: Record<string, string>;
 
   records: Record<string, RecordItem>;

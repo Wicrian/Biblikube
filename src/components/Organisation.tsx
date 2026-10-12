@@ -56,7 +56,7 @@ function OrganisationSetup() {
 
   const tpl = ORG_TEMPLATES.find((t) => t.id === template)!;
   // Exclues : la collection de résultats de recherche (et ses sous-collections, qui sont les sources)
-  // et la collection « LitFlow – projet » : les reprendre comme organisation les mélangerait au tri.
+  // et la collection « Biblikube – projet » : les reprendre comme organisation les mélangerait au tri.
   const ours = new Set([...Object.values(p.zoteroCollections), p.sourceCollection?.key].filter(Boolean));
   const tree: { c: ZCollection; depth: number }[] = [];
   const walk = (parent: string | false, depth: number) =>
@@ -91,7 +91,7 @@ function OrganisationSetup() {
           <summary>Comment ça se retrouve dans Zotero ?</summary>
           <ul style={{ margin: '0.4rem 0 0' }}>
             <li>
-              <strong>Catégories</strong> → des sous-collections Zotero, dans « LitFlow – {p.name} › 4 – Organisation · … ».
+              <strong>Catégories</strong> → des sous-collections Zotero, dans « Biblikube – {p.name} › 4 – Organisation · … ».
             </li>
             <li>
               <strong>Marqueurs</strong> (⭐ Important, 📌 À citer…) → des étiquettes Zotero <code>{p.sync.tagPrefix}:marqueur:…</code>.
@@ -168,7 +168,7 @@ function OrganisationSetup() {
           <p className="small muted">
             Si vous avez déjà rangé vos références dans Zotero, choisissez la collection qui contient vos dossiers
             d’organisation : ses sous-collections (sur deux niveaux) deviennent les catégories, et les références déjà rangées
-            le restent. LitFlow continuera ensuite à développer cette collection avec vos ajouts. La collection de vos
+            le restent. Biblikube continuera ensuite à développer cette collection avec vos ajouts. La collection de vos
             résultats de recherche{p.sourceCollection ? ` (« ${p.sourceCollection.name} »)` : ''} n’est pas proposée : elle sert
             déjà à l’identification.
           </p>
@@ -330,7 +330,7 @@ function Board() {
             <Pencil size={14} />
           </button>
           <span className="small muted">
-            {o.rootMode === 'litflow' ? `Zotero : LitFlow – ${p.name} › ${organisationRootName(o)}` : 'Zotero : collection existante'}
+            {o.rootMode === 'litflow' ? `Zotero : collection du projet › ${organisationRootName(o)}` : 'Zotero : collection existante'}
           </span>
           <button
             className="btn small"
@@ -338,7 +338,7 @@ function Board() {
               if (
                 !confirm(
                   'Changer de plan d’organisation ?\n\n' +
-                    'LitFlow arrête simplement d’utiliser ce plan : rien n’est supprimé ni modifié dans Zotero ' +
+                    'Biblikube arrête simplement d’utiliser ce plan : rien n’est supprimé ni modifié dans Zotero ' +
                     '(collections et références restent telles quelles). Vos marqueurs sont conservés.\n\n' +
                     'Vous pourrez ensuite choisir un autre modèle ou une autre collection.',
                 )
@@ -613,7 +613,7 @@ function DeleteCategoryDialog({ cat, onClose }: { cat: Category; onClose: () => 
           {o.rootMode === 'existing' && (
             <>
               {' '}
-              <strong>Attention :</strong> ce plan reprend une collection Zotero qui existait avant LitFlow ; c’est cette
+              <strong>Attention :</strong> ce plan reprend une collection Zotero qui existait avant Biblikube ; c’est cette
               sous-collection-là qui sera supprimée.
             </>
           )}

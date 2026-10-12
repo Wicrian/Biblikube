@@ -42,7 +42,7 @@ export default function App() {
     <>
       {IS_TEST && (
         <div className="test-banner">
-          🧪 VERSION TEST : vos revues ici sont séparées de LitFlow officiel. Utilisez la démo ou une bibliothèque Zotero de test.
+          🧪 VERSION TEST : vos revues ici sont séparées de Biblikube officiel. Utilisez la démo ou une bibliothèque Zotero de test.
         </div>
       )}
       {current ? (
@@ -101,7 +101,7 @@ function Frame({ rail, children, onLogo }: { rail: ReactNode; children: ReactNod
     <div className="app">
       <div className="frame">
         <aside className="rail">
-          <button className="logo" onClick={onLogo} title="LitFlow – accueil">
+          <button className="logo" onClick={onLogo} title="Biblikube – accueil">
             <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" />
           </button>
           {rail}

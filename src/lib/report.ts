@@ -197,7 +197,7 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
 <div class="box"><div class="v">${n(d.fulltext.total)}</div><div class="l">au texte intégral</div></div><div class="arr">→</div>
 <div class="box final"><div class="v">${n(d.fulltext.include)}</div><div class="l">incluses à ce jour</div></div></div>
 <div class="flow"><div class="out">−${n(d.duplicates)} doublons</div><div></div><div class="out">−${n(d.screening.exclude)} exclues au tri</div><div></div><div class="out">−${n(d.fulltext.exclude)} exclues · ${n(d.fulltext.total - d.fulltext.done)} à lire</div><div></div><div></div></div>
-<div class="note">Le diagramme PRISMA 2020 complet se trouve dans LitFlow (onglet PRISMA).</div></div>`
+<div class="note">Le diagramme PRISMA 2020 complet se trouve dans Biblikube (onglet PRISMA).</div></div>`
       : '';
 
   const sources = d.sources.length
@@ -268,11 +268,11 @@ td{padding:5px 4px;border-bottom:1px solid ${t.soft};vertical-align:top}.n{text-
 .comment p{margin:0;font-size:9.6pt}
 .foot{margin-top:14px;display:flex;font-size:7.6pt;color:${t.muted};border-top:1px solid ${t.soft};padding-top:6px}
 </style></head><body><div class="wrap">
-<div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">LitFlow</span><span class="sp"></span><span class="pill">Point d’étape · ${d.date}</span></div>
+<div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">Biblikube</span><span class="sp"></span><span class="pill">Point d’étape · ${d.date}</span></div>
 <div class="eyebrow">${d.modeLabel} · point d’étape</div>
 <h1>${esc(d.name)}</h1>
 ${d.question ? `<div class="q"><b>Question de recherche</b>${esc(d.question)}</div>` : ''}
 ${body}
-<div class="foot">Généré par LitFlow · données lues dans Zotero le ${d.date}<span class="sp"></span>Ambiance « ${esc(t.name)} »</div>
+<div class="foot">Généré par Biblikube · données lues dans Zotero le ${d.date}<span class="sp"></span>Ambiance « ${esc(t.name)} »</div>
 </div></body></html>`;
 }

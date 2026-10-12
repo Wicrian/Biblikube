@@ -1,5 +1,5 @@
 // Client minimal de l'API Web Zotero v3 (https://www.zotero.org/support/dev/web_api/v3/start).
-// Tout passe par HTTPS directement depuis le navigateur : aucun serveur LitFlow
+// Tout passe par HTTPS directement depuis le navigateur : aucun serveur Biblikube
 // n'est nécessaire et la clé API ne quitte jamais votre ordinateur (sauf vers zotero.org).
 
 import type { ZoteroLibrary } from '../types';

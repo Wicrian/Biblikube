@@ -43,7 +43,7 @@ describe('import Rayyan', () => {
     expect(plan.decisions.DEMO0001).toMatchObject({ decision: 'include', labels: ['qualitatif', 'Québec'] });
     expect(plan.decisions.DEMO0004).toMatchObject({ decision: 'exclude', reasons: ['wrong population', 'background article'] });
     expect(plan.duplicates).toEqual({ DEMO0002: 'DEMO0001', DEMO0005: 'DEMO0004' });
-    expect(plan.decisions.DEMO0013).toBeUndefined(); // décision LitFlow conservée
+    expect(plan.decisions.DEMO0013).toBeUndefined(); // décision Biblikube conservée
     expect(plan.skippedExisting).toBe(1);
     expect(planRayyanImport(p, m, 'Marie', { overwrite: true, acceptClose: false }).decisions.DEMO0004.decision).toBe('include');
   });

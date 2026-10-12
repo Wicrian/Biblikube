@@ -2,7 +2,7 @@ import type { Project, RecordItem } from '../types';
 import { parsePageCount, parseYear } from '../lib/text';
 import type { ZItem } from './api';
 
-/** Convertit un item Zotero en référence LitFlow, sans modifier aucun texte. */
+/** Convertit un item Zotero en référence Biblikube, sans modifier aucun texte. */
 export function toRecord(item: ZItem, sources: string[]): RecordItem {
   const d = item.data;
   return {

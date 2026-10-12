@@ -159,7 +159,7 @@ export function planRayyanImport(
     if (!m.keys.length || (m.kind === 'close' && !opts.acceptClose)) continue;
     const d = m.rayyan.decisions[reviewer] ?? Object.values(m.rayyan.decisions)[0];
     if (!d) continue;
-    // Garde la référence déjà « conservée » si LitFlow connaît déjà ces doublons.
+    // Garde la référence déjà « conservée » si Biblikube connaît déjà ces doublons.
     const keys = m.keys.filter((k) => p.records[k]);
     const keep = keys.find((k) => !(k in p.duplicates)) ?? keys[0];
     if (!keep) continue;

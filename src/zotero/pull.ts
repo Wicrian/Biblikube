@@ -1,12 +1,12 @@
-// Synchronisation Zotero -> LitFlow.
+// Synchronisation Zotero -> Biblikube.
 //
 // Si vous ajoutez ou retirez dans Zotero une étiquette « LF:… » ou déplacez un item
-// dans une collection « LitFlow – … », LitFlow reprend ce changement.
+// dans une collection « Biblikube – … », Biblikube reprend ce changement.
 //
-// Règle : on compare l'état de l'item dans Zotero à ce que LitFlow y a écrit.
+// Règle : on compare l'état de l'item dans Zotero à ce que Biblikube y a écrit.
 // Tout ce qui diffère a été changé par vous dans Zotero et est adopté, étape par étape.
-// Une référence modifiée dans LitFlow et pas encore envoyée (« en attente ») garde
-// la décision de LitFlow.
+// Une référence modifiée dans Biblikube et pas encore envoyée (« en attente ») garde
+// la décision de Biblikube.
 
 import type { Decision, Project, RecordItem, StageDecision } from '../types';
 import { fulltextKeys } from '../lib/prisma';
@@ -211,8 +211,8 @@ export function applyChanges(
   incoming: RecordItem[],
   libraryVersion: number | null,
 ): { project: Project; changed: string[]; added: number } {
-  // Ignore les versions plus anciennes que celle que LitFlow connaît déjà
-  // (ex. lecture commencée avant un envoi de LitFlow).
+  // Ignore les versions plus anciennes que celle que Biblikube connaît déjà
+  // (ex. lecture commencée avant un envoi de Biblikube).
   incoming = incoming.filter((r) => !p.records[r.key] || r.version >= p.records[r.key].version);
   const { project: merged, added } = mergeImport(p, incoming);
   const { project, changed } = reconcileFromZotero(merged, incoming);

@@ -72,7 +72,7 @@ export function RestoreDialog({
       <div className="modal stack" onClick={(e) => e.stopPropagation()}>
         <h2>Reprendre une revue depuis Zotero</h2>
         <p className="small muted">
-          LitFlow sauvegarde automatiquement chaque revue liée à Zotero dans une note de la collection « LitFlow – nom du
+          Biblikube sauvegarde automatiquement chaque revue liée à Zotero dans une note de la collection « Biblikube – nom du
           projet ». Vous pouvez ainsi la reprendre sur un autre appareil (iPad, autre ordinateur) ou après avoir vidé votre
           navigateur. Vos décisions sont relues dans Zotero, y compris celles faites à la main avec les étiquettes LF:.
         </p>
@@ -81,7 +81,7 @@ export function RestoreDialog({
         {found && found.length === 0 && (
           <div className="notice warn">
             Aucune revue sauvegardée trouvée. La sauvegarde se fait automatiquement depuis l’appareil où la revue a été créée,
-            une fois celle-ci liée à une collection Zotero : ouvrez-la au moins une fois avec cette version de LitFlow.
+            une fois celle-ci liée à une collection Zotero : ouvrez-la au moins une fois avec cette version de Biblikube.
           </div>
         )}
         {found?.map((f) => {

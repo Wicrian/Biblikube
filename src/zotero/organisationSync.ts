@@ -1,8 +1,8 @@
 // Synchronisation de la STRUCTURE du plan de classement avec Zotero :
 // une collection racine « 4 – Organisation · … » (ou une collection existante)
 // et une sous-collection par catégorie (2 niveaux). Dans les deux sens :
-//   * catégorie créée / renommée / supprimée dans LitFlow -> idem dans Zotero ;
-//   * sous-collection créée / renommée / supprimée dans Zotero -> idem dans LitFlow.
+//   * catégorie créée / renommée / supprimée dans Biblikube -> idem dans Zotero ;
+//   * sous-collection créée / renommée / supprimée dans Zotero -> idem dans Biblikube.
 // Supprimer une collection Zotero ne supprime jamais les références qu'elle contient.
 
 import type { Category, Organisation, Project, RecordItem } from '../types';
@@ -13,12 +13,12 @@ export const organisationRootName = (o: Organisation) => `4 – Organisation · 
 
 export interface StructureResult {
   org: Organisation;
-  /** Catégories supprimées dans Zotero (donc retirées de LitFlow). */
+  /** Catégories supprimées dans Zotero (donc retirées de Biblikube). */
   removedIds: string[];
 }
 
 /**
- * Met en accord la structure LitFlow et Zotero. `collections` est la liste
+ * Met en accord la structure Biblikube et Zotero. `collections` est la liste
  * actuelle des collections de la bibliothèque.
  */
 export async function syncOrganisationStructure(
@@ -29,11 +29,11 @@ export async function syncOrganisationStructure(
   let o: Organisation = { ...p.organisation, categories: p.organisation.categories.map((c) => ({ ...c })) };
   if (!o.name) return { org: o, removedIds: [] };
   const byKey = new Map(collections.map((c) => [c.key, c]));
-  // La collection de recherche et les collections LitFlow ne deviennent jamais des catégories.
+  // La collection de recherche et les collections Biblikube ne deviennent jamais des catégories.
   const excluded = new Set([p.sourceCollection?.key, ...Object.values(p.zoteroCollections)].filter(Boolean));
   const childrenOf = (key: string) => collections.filter((c) => c.data.parentCollection === key && !excluded.has(c.key));
 
-  // 1. Collections supprimées depuis LitFlow
+  // 1. Collections supprimées depuis Biblikube
   for (const key of o.deletedZoteroKeys) {
     const c = byKey.get(key);
     if (c) await client.deleteCollection(key, c.version);
@@ -142,7 +142,7 @@ export function mergeStructure(start: Organisation, res: StructureResult, cur: O
 /** Reprend une collection Zotero existante comme plan de classement. */
 export function adoptExistingRoot(p: Project, collections: ZCollection[], rootKey: string, name: string): Organisation {
   const root = collections.find((c) => c.key === rootKey);
-  // Jamais la collection de résultats de recherche ni les collections LitFlow comme catégories.
+  // Jamais la collection de résultats de recherche ni les collections Biblikube comme catégories.
   const excluded = new Set([p.sourceCollection?.key, ...Object.values(p.zoteroCollections)].filter(Boolean));
   const children = (key: string) => collections.filter((c) => c.data.parentCollection === key && !excluded.has(c.key));
   const categories: Category[] = [];
@@ -172,9 +172,9 @@ export function adoptExistingRoot(p: Project, collections: ZCollection[], rootKe
 }
 
 /**
- * Reprend dans LitFlow les classements faits à la main dans Zotero
+ * Reprend dans Biblikube les classements faits à la main dans Zotero
  * (référence glissée dans une sous-collection, étiquette LF:marqueur:… ajoutée).
- * `localCats` / `localMarkers` : ce que LitFlow a envoyé à Zotero pour cette référence.
+ * `localCats` / `localMarkers` : ce que Biblikube a envoyé à Zotero pour cette référence.
  */
 export function reconcileOrganisation(p: Project, records: RecordItem[], pending: Set<string>): { org: Organisation; changed: string[] } {
   let o = p.organisation;

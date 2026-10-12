@@ -200,7 +200,7 @@ export function Protocol() {
         </label>
         <label className="row">
           <input type="checkbox" checked={p.sync.writeNotes} onChange={(e) => set('sync', { ...p.sync, writeNotes: e.target.checked })} />
-          Créer une note « LitFlow » dans Zotero avec les raisons et vos notes de lecture
+          Créer une note « Biblikube » dans Zotero avec les raisons et vos notes de lecture
         </label>
         <label className="field" style={{ maxWidth: 360 }}>
           <span>Préfixe des étiquettes Zotero (ex. « LF » → « LF:tri:exclu »)</span>
@@ -211,7 +211,7 @@ export function Protocol() {
           lecture du texte intégral. Ajoutez l’étiquette <code>{p.sync.tagPrefix || 'LF'}:texte:exclu</code> (ou{' '}
           <code>:inclus</code>, <code>:incertain</code>, <code>:introuvable</code>) et, si vous voulez, une raison{' '}
           <code>{p.sync.tagPrefix || 'LF'}:texte:raison:Mauvaise population</code>. Glisser l’item dans une collection
-          « LitFlow – … » fonctionne aussi. LitFlow relit Zotero toutes les 45 secondes (et à chaque clic sur ⟳) ; au tri
+          « Biblikube – … » fonctionne aussi. Biblikube relit Zotero toutes les 45 secondes (et à chaque clic sur ⟳) ; au tri
           titre-résumé, utilisez <code>{p.sync.tagPrefix || 'LF'}:tri:…</code>.
         </div>
         {client && (

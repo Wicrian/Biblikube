@@ -25,7 +25,7 @@ function currentTheme(): ReportTheme {
   };
 }
 
-/** Les polices de LitFlow, avec des adresses complètes pour la page du rapport. */
+/** Les polices de Biblikube, avec des adresses complètes pour la page du rapport. */
 function fontFaces(): string {
   let out = '';
   for (const sheet of Array.from(document.styleSheets)) {

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { newProject } from '../src/lib/frameworks';
 import { ZoteroClient, type ZCollection, type ZItem } from '../src/zotero/api';
 import { mergeImport } from '../src/zotero/mapping';
-import { importFromZotero, pushToZotero } from '../src/zotero/sync';
+import { ensureCollections, importFromZotero, pushToZotero } from '../src/zotero/sync';
 import { applyChanges, fetchChanges } from '../src/zotero/pull';
 import { readSnapshots, restoreSnapshot, saveSnapshot } from '../src/zotero/snapshot';
 
@@ -113,6 +113,18 @@ beforeEach(() => {
 });
 
 describe('Zotero', () => {
+  it('retrouve la collection « LitFlow – … » d’une revue commencée avant le changement de nom', async () => {
+    const client = new ZoteroClient('key', { type: 'user', id: '1' });
+    collections.push({ key: 'OLD', version: 1, data: { key: 'OLD', name: 'LitFlow – Test', parentCollection: false } });
+    const p = newProject('Test');
+    const ids = await ensureCollections(client, p);
+    expect(ids.root).toBe('OLD');
+    expect(collections.some((c) => c.data.name === 'Biblikube – Test')).toBe(false);
+    // Une nouvelle revue prend le nouveau nom.
+    const ids2 = await ensureCollections(client, newProject('Autre'));
+    expect(collections.find((c) => c.key === ids2.root)?.data.name).toBe('Biblikube – Autre');
+  });
+
   it('importe par source, puis synchronise collections, étiquettes et notes', async () => {
     const client = new ZoteroClient('key', { type: 'user', id: '1' });
     let p = newProject('Test');
@@ -153,7 +165,7 @@ describe('Zotero', () => {
     expect(a2.tags!.map((t) => t.tag)).toEqual(['à lire', 'LF:tri:inclus']);
     expect(items.get(p.zoteroNotes.A)!.data.note).toContain('Finalement pertinent');
 
-    // Réimport : les collections LitFlow ne sont pas prises pour des sources.
+    // Réimport : les collections Biblikube ne sont pas prises pour des sources.
     const again = await importFromZotero(client, res2.project);
     expect(again.sources.map((s) => s.name).sort()).toEqual(['PubMed', 'Érudit']);
   });
@@ -173,7 +185,7 @@ describe('Zotero', () => {
 
     // Dans Zotero : A reçoit l'étiquette « exclu » + une raison (l'ancienne étiquette reste),
     // B est glissé dans la collection « Exclus » (il reste aussi dans « Inclus »),
-    // C a été re-modifié dans LitFlow (en attente) : LitFlow garde la main.
+    // C a été re-modifié dans Biblikube (en attente) : Biblikube garde la main.
     const edit = (key: string, fn: (data: ZItem['data']) => void) => {
       const it = items.get(key)!;
       const v = ++version;

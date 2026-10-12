@@ -1,9 +1,9 @@
-// Synchronisation LitFlow -> Zotero.
+// Synchronisation Biblikube -> Zotero.
 //
-// Pour chaque référence, LitFlow calcule l'état attendu dans Zotero :
+// Pour chaque référence, Biblikube calcule l'état attendu dans Zotero :
 //   * les collections du projet (« 0 – Doublons », « 1 – Tri… », « 3 – Inclus… ») ;
 //   * des étiquettes lisibles (« LF:tri:exclu », « LF:tri:raison:Hors sujet »…) ;
-//   * éventuellement une note enfant « LitFlow » avec les raisons et les notes de lecture.
+//   * éventuellement une note enfant « Biblikube » avec les raisons et les notes de lecture.
 // Seuls ces éléments sont modifiés : les autres collections et étiquettes de
 // l'utilisateur, les titres, résumés, etc. ne sont jamais touchés.
 
@@ -36,7 +36,9 @@ export const COLLECTION_NAMES: Record<Exclude<CollectionId, 'root'>, string> = {
   included: '3 – Inclus dans la revue',
 };
 
-export const rootCollectionName = (p: Project) => `LitFlow – ${p.name}`;
+export const rootCollectionName = (p: Project) => `Biblikube – ${p.name}`;
+/** Nom donné avant le changement de nom de l'application (LitFlow → Biblikube). */
+const legacyRootCollectionName = (p: Project) => `LitFlow – ${p.name}`;
 
 const DECISION_TAG: Record<Decision, string> = { include: 'inclus', exclude: 'exclu', maybe: 'incertain' };
 const DECISION_LABEL: Record<Decision, string> = { include: 'Inclus', exclude: 'Exclu', maybe: 'Incertain' };
@@ -117,14 +119,14 @@ function stageHtml(title: string, d: StageDecision | undefined): string {
   return `<p><strong>${title} :</strong> ${DECISION_LABEL[d.decision]}${reasons}</p>${note}`;
 }
 
-/** Contenu HTML de la note « LitFlow » attachée à l'item dans Zotero. */
+/** Contenu HTML de la note « Biblikube » attachée à l'item dans Zotero. */
 export function noteHtml(p: Project, key: string): string | null {
   const s = p.screening[key];
   const f = p.fulltext[key];
   const hasContent = [s, f].some((d) => d && (d.note.trim() || d.reasons.length));
   if (!hasContent && !(key in p.notRetrieved)) return null;
   return (
-    `<h2>LitFlow – ${esc(p.name)}</h2>` +
+    `<h2>Biblikube – ${esc(p.name)}</h2>` +
     stageHtml('Tri titre-résumé', s) +
     stageHtml('Texte intégral', f) +
     (key in p.notRetrieved ? `<p><strong>Texte intégral introuvable</strong> ${esc(p.notRetrieved[key])}</p>` : '')
@@ -137,7 +139,7 @@ export interface SyncProgress {
 
 /**
  * Vérifie les collections du projet dans Zotero et crée celles qui manquent.
- * Seules la collection « LitFlow – projet » et les collections `needed` sont
+ * Seules la collection « Biblikube – projet » et les collections `needed` sont
  * créées : un dossier (« 1 – Tri · Exclus »…) n'apparaît que lorsqu'il sert.
  */
 export async function ensureCollections(
@@ -153,6 +155,7 @@ export async function ensureCollections(
   if (!root) {
     root =
       existing.find((c) => !c.data.parentCollection && c.data.name === rootCollectionName(p))?.key ??
+      existing.find((c) => !c.data.parentCollection && c.data.name === legacyRootCollectionName(p))?.key ??
       (await client.createCollection(rootCollectionName(p)));
     ids.root = root;
   }

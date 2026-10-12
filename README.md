@@ -1,9 +1,12 @@
-# LitFlow
+# Biblikube
 
 **Application libre et gratuite pour mener une revue systématique de littérature, directement connectée à Zotero.**
 
-LitFlow s’inspire de Covidence et de Rayyan, mais avec une idée différente : **Zotero reste la source de vérité**.
-Vos références ne sont jamais réimportées ni converties : LitFlow les lit dans votre bibliothèque Zotero et y
+> ℹ️ **Anciennement « LitFlow ».** L’application a changé de nom en octobre 2026 pour éviter toute confusion avec un
+> autre projet de recherche qui porte déjà ce nom. Vos revues, votre clé Zotero et vos collections restent en place.
+
+Biblikube s’inspire de Covidence et de Rayyan, mais avec une idée différente : **Zotero reste la source de vérité**.
+Vos références ne sont jamais réimportées ni converties : Biblikube les lit dans votre bibliothèque Zotero et y
 écrit, au fur et à mesure, le résultat de chaque étape (collections, étiquettes, notes). Les titres, résumés et
 accents restent exactement comme dans Zotero.
 
@@ -12,46 +15,46 @@ accents restent exactement comme dans Zotero.
 
 ---
 
-## Ce que fait LitFlow
+## Ce que fait Biblikube
 
-| Étape | Dans LitFlow | Ce qui apparaît dans Zotero |
+| Étape | Dans Biblikube | Ce qui apparaît dans Zotero |
 |---|---|---|
 | **1. Protocole** | Type de revue, question, cadre **PICO, PICOS, PICOT, PECO, PEO, PCC, SPIDER, SPICE, ECLIPSE** ou personnalisé, critères d’inclusion/exclusion, mots-clés à surligner | — |
 | **2. Identification** | Lecture d’une collection Zotero ; chaque sous-collection = une source (PubMed, Cairn, Érudit…) | Rien n’est modifié |
 | **3. Doublons** | Détection par DOI, titre identique et titres très proches (accents et majuscules ignorés pour comparer, jamais supprimés) | Collection `0 – Doublons` + étiquette `LF:doublon` |
 | **4. Tri titre-résumé** | Cartes à glisser : **← exclure, → inclure, ↑ incertain** (ou clavier). Choix rapide de la raison, ou nouvelle raison mémorisée, ou « Passer » | Collections `1 – Tri titre-résumé · Inclus / Exclus / Incertains`, étiquettes `LF:tri:exclu`, `LF:tri:raison:Hors sujet`… |
-| **5. Texte intégral** | Même interface + notes de lecture, liens vers les PDF de Zotero, « texte introuvable » | `2 – Texte intégral · Exclus / Incertains / Introuvables`, `3 – Inclus dans la revue`, note enfant « LitFlow » avec raisons et notes |
+| **5. Texte intégral** | Même interface + notes de lecture, liens vers les PDF de Zotero, « texte introuvable » | `2 – Texte intégral · Exclus / Incertains / Introuvables`, `3 – Inclus dans la revue`, note enfant « Biblikube » avec raisons et notes |
 | **PRISMA 2020** | Diagramme calculé automatiquement (français ou anglais), avec colonne « autres méthodes », export **SVG et PNG** | — |
 | **Références** | Tableau filtrable (type de document, langue, source, années, nombre de pages, résumé, étiquettes Zotero…), décisions groupées, export **CSV** (s’ouvre avec les accents dans Excel) | — |
 
 **La synchronisation marche dans les deux sens** : vous pouvez aussi décider directement dans Zotero (pratique
 pendant la lecture des PDF). Ajoutez par exemple les étiquettes `LF:texte:exclu` et `LF:texte:raison:Mauvaise
-population`, ou glissez l’item dans la collection `2 – Texte intégral · Exclus` : LitFlow le lit toutes les
+population`, ou glissez l’item dans la collection `2 – Texte intégral · Exclus` : Biblikube le lit toutes les
 45 secondes et met à jour ses décisions et le diagramme PRISMA. Les nouvelles références ajoutées aux collections
 sources sont aussi détectées.
 
-Vos autres collections et étiquettes Zotero ne sont **jamais** touchées : LitFlow ne gère que ce qu’il a créé
-(la collection `LitFlow – nom du projet` et les étiquettes qui commencent par `LF:`).
+Vos autres collections et étiquettes Zotero ne sont **jamais** touchées : Biblikube ne gère que ce qu’il a créé
+(la collection `Biblikube – nom du projet` et les étiquettes qui commencent par `LF:`).
 
 ## Démarrer (sans rien installer)
 
-1. Ouvrez l’application en ligne : **https://wicrian.github.io/LitFlow/** *(une fois GitHub Pages activé, voir
+1. Ouvrez l’application en ligne : **https://wicrian.github.io/Biblikube/** *(une fois GitHub Pages activé, voir
    plus bas)*. Vous pouvez d’abord cliquer sur **« Essayer avec des données de démonstration »**.
 2. Créez une clé API Zotero : <https://www.zotero.org/settings/keys/new>
    - cochez **Allow library access** et **Allow write access** ;
    - pour travailler en équipe, donnez aussi l’accès en lecture/écriture aux **groupes**.
-3. Dans LitFlow : ⚙️ **Connexion Zotero** → collez la clé.
+3. Dans Biblikube : ⚙️ **Connexion Zotero** → collez la clé.
 4. Créez un projet → onglet **Identification** → choisissez la bibliothèque puis la collection de vos résultats.
 
 ### Organisation conseillée dans Zotero
 
 ```
-📁 Ma revue – santé mentale          ← la collection à choisir dans LitFlow
+📁 Ma revue – santé mentale          ← la collection à choisir dans Biblikube
    📁 PubMed                          ← une sous-collection par base de données
    📁 Cairn
    📁 Érudit
    📁 Recherche par citations         ← « autre méthode » dans PRISMA
-📁 LitFlow – Ma revue                 ← créée automatiquement par LitFlow
+📁 Biblikube – Ma revue                 ← créée automatiquement par Biblikube
    📁 0 – Doublons
    📁 1 – Tri titre-résumé · Inclus
    📁 1 – Tri titre-résumé · Exclus
@@ -118,8 +121,8 @@ systématique (tri, texte intégral, PRISMA) : on peut commencer par l’un, ajo
 faire de tri. Une référence peut être classée à tout moment, quelle que soit sa décision de tri (ex. exclue pour la
 question de recherche, gardée pour la méthodologie).
 
-- **Catégories** (2 niveaux) → sous-collections Zotero dans `LitFlow – projet › 4 – Organisation · nom du plan`,
-  ou dans une **collection Zotero existante** que LitFlow reprend et continue à développer.
+- **Catégories** (2 niveaux) → sous-collections Zotero dans `Biblikube – projet › 4 – Organisation · nom du plan`,
+  ou dans une **collection Zotero existante** que Biblikube reprend et continue à développer.
 - **Marqueurs** (⭐ Important, 📌 À citer…) → étiquettes `LF:marqueur:…` ; cliquer sur un marqueur filtre les références.
 - **Tri en cercle** : les références à classer en pile au centre, les catégories en bulles autour. Glisser la carte
   (souris ou doigt) vers une bulle la range et fait venir la suivante ; toucher plusieurs bulles puis « Suivante »
@@ -129,8 +132,8 @@ question de recherche, gardée pour la méthodologie).
   tablette pour la classer ; boutons de classement rapides pendant le tri et le texte intégral ; classement groupé
   depuis l’onglet Références.
 - **Dans les deux sens** : glisser une référence dans une de ces sous-collections dans Zotero, en créer, renommer ou
-  supprimer une, ajouter une étiquette `LF:marqueur:…` : LitFlow le reprend.
-- **Supprimer une catégorie** supprime la sous-collection Zotero mais **jamais les références** : LitFlow demande
+  supprimer une, ajouter une étiquette `LF:marqueur:…` : Biblikube le reprend.
+- **Supprimer une catégorie** supprime la sous-collection Zotero mais **jamais les références** : Biblikube demande
   s’il faut les remettre « à classer », les déplacer dans une autre catégorie ou leur donner un marqueur.
 
 ## Reprendre un tri commencé dans Rayyan
@@ -145,7 +148,7 @@ d’importer.
 ## Reprendre une revue sur un autre appareil
 
 Chaque revue liée à Zotero est sauvegardée automatiquement (protocole, raisons, décisions, notes, réglages) dans
-une note de la collection `LitFlow – nom du projet`, avec l’étiquette `LitFlow-projet`. Sur un autre appareil
+une note de la collection `Biblikube – nom du projet`, avec l’étiquette `Biblikube-projet`. Sur un autre appareil
 (iPad, autre ordinateur) ou après avoir vidé le navigateur : **Accueil › Reprendre depuis Zotero**. Les références
 sont relues dans Zotero et les décisions prises entre-temps dans Zotero (étiquettes `LF:`) sont reprises.
 
@@ -154,7 +157,7 @@ une modification du protocole faite sur l’un n’apparaît sur l’autre qu’
 
 ## Confidentialité
 
-- LitFlow n’a **pas de serveur** : c’est une page web qui fonctionne entièrement dans votre navigateur.
+- Biblikube n’a **pas de serveur** : c’est une page web qui fonctionne entièrement dans votre navigateur.
 - Vos projets sont enregistrés dans le navigateur (IndexedDB). Utilisez **Références › Sauvegarder le projet**
   pour changer d’ordinateur ou partager.
 - La clé API Zotero est stockée dans le navigateur et n’est envoyée qu’à `api.zotero.org`.
@@ -163,7 +166,7 @@ une modification du protocole faite sur l’un n’apparaît sur l’autre qu’
 ## Travailler en équipe
 
 Aujourd’hui : utilisez une **bibliothèque de groupe Zotero**. Chaque membre voit dans Zotero les collections et
-étiquettes créées par LitFlow. Le double tri en aveugle avec gestion des désaccords (comme dans Covidence) est
+étiquettes créées par Biblikube. Le double tri en aveugle avec gestion des désaccords (comme dans Covidence) est
 prévu dans la feuille de route.
 
 ---
@@ -225,7 +228,7 @@ Le dossier `dist/` produit par `npm run build` peut aussi être déposé sur n�
 
 **À venir (prioritaire)**
 
-- [ ] Nouveau nom pour l’application (un autre projet s’appelle déjà LitFlow)
+- [ ] Nouveau nom pour l’application (un autre projet s’appelle déjà Biblikube)
 - [ ] Recherche : profils Érudit et Cairn corrigés, vérification des équations avec des « articles témoins »
 - [ ] Compteur de temps de travail et de séances (temps actif seulement, pause après 2 min d’inactivité)
 - [ ] Écran « Bon retour » pour reprendre là où on s’était arrêté
@@ -252,7 +255,7 @@ Les contributions sont bienvenues : ouvrez une *issue* pour en discuter.
 ## Licence
 
 [GNU AGPL v3 ou ultérieure](LICENSE) — la même famille de licence que Zotero. Vous pouvez utiliser, modifier et
-redistribuer LitFlow librement ; toute version modifiée mise à disposition en ligne doit rester libre.
+redistribuer Biblikube librement ; toute version modifiée mise à disposition en ligne doit rester libre.
 
 ## Logo
 

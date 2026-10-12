@@ -4,7 +4,7 @@ import type { ZItem } from '../src/zotero/api';
 
 const item = (key: string, data: Record<string, unknown>): ZItem => ({ key, version: 1, data: { key, version: 1, itemType: 'note', ...data } as ZItem['data'] });
 
-describe('notes Zotero affichées dans LitFlow', () => {
+describe('notes Zotero affichées dans Biblikube', () => {
   it('convertit le HTML en texte sans jamais l’interpréter', () => {
     expect(htmlToText('<p>Bon cadre&nbsp;pour le <b>ch. 2</b></p><p>Élus &amp; formation</p><ul><li>un</li><li>deux</li></ul>')).toBe(
       'Bon cadre pour le ch. 2\nÉlus & formation\n• un\n• deux',
@@ -13,10 +13,11 @@ describe('notes Zotero affichées dans LitFlow', () => {
     expect(htmlToText('&#233;t&#xE9;')).toBe('été');
   });
 
-  it('garde les notes de la personne et écarte celle de LitFlow', () => {
+  it('garde les notes de la personne et écarte celle de Biblikube', () => {
     const children = [
       item('N1', { note: '<p>Ma note</p>' }),
-      item('N2', { note: '<h2>LitFlow – Revue</h2><p>Tri…</p>' }),
+      item('N2', { note: '<h2>Biblikube – Revue</h2><p>Tri…</p>' }),
+      item('N2b', { note: '<h2>LitFlow – Revue</h2><p>Tri…</p>' }),
       item('N3', { note: '<p>Autre</p>' }),
       item('A1', { itemType: 'attachment', contentType: 'application/pdf', linkMode: 'imported_file' }),
       item('A2', { itemType: 'attachment', contentType: 'text/html', linkMode: 'linked_url' }),

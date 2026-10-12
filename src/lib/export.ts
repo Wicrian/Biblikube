@@ -49,12 +49,12 @@ export function download(filename: string, content: BlobPart, type: string) {
 export const safeFileName = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80);
 
 export function exportProjectJson(p: Project) {
-  download(`${safeFileName(p.name)}.litflow.json`, JSON.stringify({ format: 'litflow', version: 1, project: p }, null, 2), 'application/json');
+  download(`${safeFileName(p.name)}.biblikube.json`, JSON.stringify({ format: 'litflow', version: 1, project: p }, null, 2), 'application/json');
 }
 
 export async function importProjectJson(file: File): Promise<Project> {
   const data = JSON.parse(await file.text());
   const p = data?.format === 'litflow' ? data.project : data;
-  if (!p?.id || !p?.records) throw new Error('Ce fichier n’est pas une sauvegarde LitFlow.');
+  if (!p?.id || !p?.records) throw new Error('Ce fichier n’est pas une sauvegarde Biblikube.');
   return upgradeProject(p as Project);
 }

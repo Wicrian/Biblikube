@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 /** Questions fréquentes, repliées par défaut pour ne pas charger la page d'accueil. */
 const FAQ: { q: string; a: ReactNode }[] = [
   {
-    q: 'LitFlow peut-il abîmer mon Zotero ?',
+    q: 'Biblikube peut-il abîmer mon Zotero ?',
     a: (
       <>
         <p>
-          Non. LitFlow ne supprime jamais vos références, vos PDF, ni vos propres notes, étiquettes ou collections. Il
-          ajoute seulement ses propres éléments : une collection « LitFlow – nom du projet », des étiquettes commençant par{' '}
+          Non. Biblikube ne supprime jamais vos références, vos PDF, ni vos propres notes, étiquettes ou collections. Il
+          ajoute seulement ses propres éléments : une collection « Biblikube – nom du projet », des étiquettes commençant par{' '}
           <code>LF:</code> et des notes. Quand vous changez une décision, il retire uniquement sa propre étiquette.
         </p>
         <p>
@@ -23,9 +23,9 @@ const FAQ: { q: string; a: ReactNode }[] = [
     q: 'Qui peut voir ma revue ?',
     a: (
       <p>
-        Seulement vous, et les personnes qui ont déjà accès à votre bibliothèque Zotero. LitFlow n’a ni serveur ni compte :
+        Seulement vous, et les personnes qui ont déjà accès à votre bibliothèque Zotero. Biblikube n’a ni serveur ni compte :
         vos données restent dans ce navigateur et dans votre Zotero. Si vous travaillez dans une bibliothèque de groupe, les
-        membres du groupe voient les collections, étiquettes et notes créées par LitFlow, comme n’importe quel autre
+        membres du groupe voient les collections, étiquettes et notes créées par Biblikube, comme n’importe quel autre
         contenu du groupe.
       </p>
     ),
@@ -35,7 +35,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
     a: (
       <p>
         Elle est enregistrée uniquement dans ce navigateur et n’est envoyée qu’à Zotero (api.zotero.org). Vous pouvez la
-        retirer à tout moment avec « Oublier la clé » dans les réglages Zotero de LitFlow, ou la révoquer sur zotero.org. Sur
+        retirer à tout moment avec « Oublier la clé » dans les réglages Zotero de Biblikube, ou la révoquer sur zotero.org. Sur
         un ordinateur partagé, pensez à la retirer après usage.
       </p>
     ),
@@ -72,8 +72,8 @@ const FAQ: { q: string; a: ReactNode }[] = [
     q: 'Est-ce vraiment gratuit ?',
     a: (
       <p>
-        Oui. LitFlow est un logiciel libre (licence AGPL) : gratuit, sans publicité, et son code est public sur{' '}
-        <a href="https://github.com/wicrian/litflow" target="_blank" rel="noreferrer">
+        Oui. Biblikube est un logiciel libre (licence AGPL) : gratuit, sans publicité, et son code est public sur{' '}
+        <a href="https://github.com/wicrian/biblikube" target="_blank" rel="noreferrer">
           GitHub
         </a>
         . Il est tout jeune : vos retours aident à l’améliorer.

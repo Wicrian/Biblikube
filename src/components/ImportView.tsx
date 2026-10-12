@@ -142,15 +142,15 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
             )}
             {compact && p.mode !== 'systematic' ? (
               <div className="notice small">
-                Choisissez la collection sur laquelle vous voulez travailler. LitFlow ne la modifie jamais : il crée à côté une
-                collection « LitFlow – {p.name} ».
+                Choisissez la collection sur laquelle vous voulez travailler. Biblikube ne la modifie jamais : il crée à côté une
+                collection « Biblikube – {p.name} ».
               </div>
             ) : (
             <div className="notice small">
               Conseil : créez dans Zotero une collection pour la revue, avec une <strong>sous-collection par source</strong>{' '}
               (ex. « PubMed », « Cairn », « Érudit », « Recherche par citations »). Chaque sous-collection sera comptée
-              séparément dans le diagramme PRISMA. LitFlow ne modifie jamais ces collections : il crée à côté une collection
-              « LitFlow – {p.name} ».
+              séparément dans le diagramme PRISMA. Biblikube ne modifie jamais ces collections : il crée à côté une collection
+              « Biblikube – {p.name} ».
             </div>
             )}
             <div className="row">

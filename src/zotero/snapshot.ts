@@ -3,7 +3,8 @@
 //
 // Le projet (protocole, raisons, décisions, notes, réglages) est compressé et
 // rangé dans une ou plusieurs notes indépendantes de la collection
-// « LitFlow – nom du projet », avec l'étiquette « LitFlow-projet ».
+// « Biblikube – nom du projet », avec l'étiquette « LitFlow-projet »
+// (nom d'origine de l'application, gardé pour retrouver les sauvegardes existantes).
 // Les références elles-mêmes ne sont pas copiées : elles sont relues dans
 // Zotero au moment de la reprise, puis les étiquettes LF:… font foi.
 
@@ -65,8 +66,8 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 function noteHtml(p: Project, stamp: string, id: string, k: number, n: number, chunk: string): string {
   return (
-    `<h1>LitFlow – sauvegarde du projet « ${esc(p.name)} »${n > 1 ? ` (partie ${k}/${n})` : ''}</h1>` +
-    `<p>Cette note permet de reprendre la revue dans LitFlow sur un autre appareil (bouton « Reprendre depuis Zotero »). ` +
+    `<h1>Biblikube – sauvegarde du projet « ${esc(p.name)} »${n > 1 ? ` (partie ${k}/${n})` : ''}</h1>` +
+    `<p>Cette note permet de reprendre la revue dans Biblikube sur un autre appareil (bouton « Reprendre depuis Zotero »). ` +
     `Elle est mise à jour automatiquement : ne la modifiez pas et ne la supprimez pas.</p>` +
     `<p>Dernière mise à jour : ${new Date(stamp).toLocaleString('fr-CA')}</p>` +
     `<pre>${MARK}:${id}:${k}/${n}:${chunk}</pre>`
@@ -104,7 +105,7 @@ export async function saveSnapshot(client: ZoteroClient, p: Project): Promise<Sn
   });
   // Parties devenues inutiles : vidées (jamais supprimées).
   for (const key of reusable.slice(chunks.length))
-    writes.push({ key, version: byKey.get(key)!.version, note: '<p>LitFlow – ancienne partie de sauvegarde, inutilisée.</p>' });
+    writes.push({ key, version: byKey.get(key)!.version, note: '<p>Biblikube – ancienne partie de sauvegarde, inutilisée.</p>' });
 
   const res = await client.writeItems(writes);
   const failed = Object.values(res.failed);
