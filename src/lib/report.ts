@@ -153,7 +153,7 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 const n = (x: number) => x.toLocaleString('fr-CA');
 
 /** Page HTML autonome du rapport (2 pages environ au format Lettre). */
-export function reportHtml(d: ReportData, t: ReportTheme, fontCss = ''): string {
+export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl = ''): string {
   const tile = (v: string, l: string, sub = '') => `<div class="card tile"><div class="v">${v}</div><div class="l">${l}</div>${sub ? `<div class="d">${sub}</div>` : ''}</div>`;
   const bars = (rows: { label: string; count: number; sub?: boolean }[], color: string, faded = false) => {
     const max = Math.max(1, ...rows.map((r) => r.count));
@@ -232,6 +232,7 @@ body{margin:0;background:#fff linear-gradient(170deg,${t.soft} 0%,#fff 70%) no-r
 @media print{.wrap{padding:.45in .5in 0}}
 .top{display:flex;align-items:center;gap:10px}
 .logo{width:28px;height:28px;border-radius:50%;background:${t.accent};color:#fff;display:grid;place-items:center;font-size:14px}
+img.logo{width:34px;height:34px;border-radius:0;background:none;object-fit:contain}
 .brand{font-family:'Outfit Variable',Outfit,'Inter Variable',Inter,sans-serif;font-weight:700;font-size:12pt}
 .sp{flex:1}
 .pill{border:1px solid ${t.soft};border-radius:999px;padding:3px 10px;font-size:8pt;color:${t.muted}}
@@ -267,7 +268,7 @@ td{padding:5px 4px;border-bottom:1px solid ${t.soft};vertical-align:top}.n{text-
 .comment p{margin:0;font-size:9.6pt}
 .foot{margin-top:14px;display:flex;font-size:7.6pt;color:${t.muted};border-top:1px solid ${t.soft};padding-top:6px}
 </style></head><body><div class="wrap">
-<div class="top"><span class="logo">✦</span><span class="brand">LitFlow</span><span class="sp"></span><span class="pill">Point d’étape · ${d.date}</span></div>
+<div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">LitFlow</span><span class="sp"></span><span class="pill">Point d’étape · ${d.date}</span></div>
 <div class="eyebrow">${d.modeLabel} · point d’étape</div>
 <h1>${esc(d.name)}</h1>
 ${d.question ? `<div class="q"><b>Question de recherche</b>${esc(d.question)}</div>` : ''}

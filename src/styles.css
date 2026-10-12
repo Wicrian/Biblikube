@@ -249,6 +249,8 @@ svg.spin { animation: spin 1s linear infinite; }
   transition: transform 0.15s;
 }
 .logo:hover { transform: rotate(-6deg) scale(1.05); }
+.credit { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 0.5rem 0 0; }
+.credit img { width: 26px; height: 26px; object-fit: contain; }
 .logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(40, 30, 90, 0.18)); }
 .rail-item {
   border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;

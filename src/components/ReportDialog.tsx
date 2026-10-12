@@ -49,7 +49,7 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const fonts = useMemo(fontFaces, []);
   const theme = useMemo(currentTheme, []);
-  const html = useMemo(() => reportHtml(reportData({ ...p, reportComment: comment }), theme, fonts), [p, comment, theme, fonts]);
+  const html = useMemo(() => reportHtml(reportData({ ...p, reportComment: comment }), theme, fonts, new URL('logo.png', document.baseURI).href), [p, comment, theme, fonts]);
 
   // Coche « Faire un point d'étape » dans le guide.
   useEffect(() => {
