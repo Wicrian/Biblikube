@@ -205,23 +205,46 @@ src/
 Le dossier `dist/` produit par `npm run build` peut aussi être déposé sur n’importe quel hébergement statique
 (serveur universitaire, Netlify…).
 
-### Feuille de route (idées)
+### Feuille de route
 
-- [ ] **FAQ « Sécurité et confidentialité » dans l’application** (ex. « LitFlow peut-il abîmer mon Zotero ? »,
-      « Qui peut voir ma revue ? ») + court texte de présentation pour rassurer les nouveaux utilisateurs
-- [ ] Stockage « permanent » du navigateur + rappel de sauvegarde
-- [ ] Héberger le programme de l’assistant IA avec LitFlow (au lieu de jsDelivr)
-- [x] Autres thèmes de couleurs : classique, chaleureux, moderne, plein air
-- [ ] Organisation : vue libre (zones à dessiner sur une grande surface)
-- [ ] Organisation : catégorie suggérée par l’IA locale
+**Déjà fait**
 
+- [x] Tri titre-résumé en cartes (glisser ou clavier), texte intégral, diagramme PRISMA 2020 (FR/EN)
+- [x] Doublons : fiches détaillées (type, titre du livre, pages, ISBN, différences surlignées, nombre de notes et
+      pièces jointes, alerte « chapitres d’un même livre »)
+- [x] Notes Zotero et surlignages des PDF affichés dans les cartes (tri, organisation, doublons)
+- [x] Organisation : catégories, sous-catégories et marqueurs, vue en cercle et en colonnes, onglet « Toutes »,
+      trois façons de créer son plan (proposé, coller son plan, partir de zéro)
+- [x] Démarrage guidé : 3 questions (usage, Zotero, aperçu), menu adapté à l’usage, guide « Pour bien démarrer »
+- [x] « Point d’étape » en PDF aux couleurs de l’ambiance, avec commentaire facultatif
+- [x] FAQ « Sécurité et confidentialité » sur l’accueil
+- [x] Cinq ambiances de couleurs : innovation, classique, moderne, chaleureux, plein air
+- [x] Import des décisions Rayyan ; type de chaque source (base de données / autre méthode)
+- [x] Version test séparée (/test/) avec ses propres données
+- [x] Logo
+
+**À venir (prioritaire)**
+
+- [ ] Nouveau nom pour l’application (un autre projet s’appelle déjà LitFlow)
+- [ ] Recherche : profils Érudit et Cairn corrigés, vérification des équations avec des « articles témoins »
+- [ ] Compteur de temps de travail et de séances (temps actif seulement, pause après 2 min d’inactivité)
+- [ ] Écran « Bon retour » pour reprendre là où on s’était arrêté
+- [ ] Empêcher le changement de bibliothèque Zotero en cours de revue, ou « déménager » proprement la revue
+- [ ] Point d’étape exportable en Word
+
+**Idées pour plus tard**
+
+- [ ] Lecteur PDF intégré avec surlignage des mots-clés
 - [ ] Double tri en aveugle entre personnes, résolution des conflits (le kappa existe déjà pour l’IA)
-- [ ] Assistant IA : explications rédigées par un modèle de langage local (Ollama), en option
 - [ ] Grille d’extraction de données personnalisable, export tableur
 - [ ] Évaluation de la qualité / du risque de biais (CASP, MMAT, RoB 2…)
-- [ ] Interface en anglais et autres langues
-- [x] Import des décisions Rayyan
 - [ ] Import des décisions Covidence
+- [ ] Organisation : vue libre (zones à dessiner), glisser par appui long dans les colonnes,
+      catégorie suggérée par l’IA locale
+- [ ] Stockage « permanent » du navigateur + rappel de sauvegarde
+- [ ] Héberger le programme de l’assistant IA avec l’application (au lieu de jsDelivr)
+- [ ] Assistant IA : explications rédigées par un modèle de langage local (Ollama), en option
+- [ ] Interface en anglais et autres langues
 - [ ] Extension Zotero 7 (tri directement dans Zotero)
 
 Les contributions sont bienvenues : ouvrez une *issue* pour en discuter.
@@ -233,4 +256,4 @@ redistribuer LitFlow librement ; toute version modifiée mise à disposition en 
 
 ## Logo
 
-Le logo (le cube) a été créé par **Maude Leblanc-Côté** — [@imelartiste](https://www.instagram.com/imelartiste/) sur Instagram.
+Le logo (le cube) a été créé par **Maude Leblanc-Côté** — [@atelier_imel](https://www.instagram.com/atelier_imel/) sur Instagram et [@atelier_imel](https://www.youtube.com/@atelier_imel) sur YouTube.

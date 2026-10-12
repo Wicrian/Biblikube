@@ -79,10 +79,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
         . Il est tout jeune : vos retours aident à l’améliorer.
         <br />
         Le logo (le cube) a été créé par Maude Leblanc-Côté,{' '}
-        <a href="https://www.instagram.com/imelartiste/" target="_blank" rel="noreferrer">
-          @imelartiste
+        <a href="https://www.instagram.com/atelier_imel/" target="_blank" rel="noreferrer">
+          @atelier_imel
         </a>{' '}
-        sur Instagram. Merci à elle !
+        sur Instagram et YouTube. Merci à elle !
       </p>
     ),
   },
