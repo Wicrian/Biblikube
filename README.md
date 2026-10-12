@@ -230,3 +230,7 @@ Les contributions sont bienvenues : ouvrez une *issue* pour en discuter.
 
 [GNU AGPL v3 ou ultérieure](LICENSE) — la même famille de licence que Zotero. Vous pouvez utiliser, modifier et
 redistribuer LitFlow librement ; toute version modifiée mise à disposition en ligne doit rester libre.
+
+## Logo
+
+Le logo (le cube) a été créé par **Maude Leblanc-Côté** — [@imelartiste](https://www.instagram.com/imelartiste/) sur Instagram.

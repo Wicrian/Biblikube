@@ -164,9 +164,6 @@ export function Home({ projects, settings, onOpen, onDelete, onSettings, onTheme
         </p>
       </section>
       <Faq />
-      <p className="credit small muted">
-        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" /> Logo créé par Maud Leblanc-Côté
-      </p>
       {restoring && <RestoreDialog settings={settings} localProjects={projects} onClose={() => setRestoring(false)} onOpen={onOpen} />}
     </main>
   );
