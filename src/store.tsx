@@ -62,6 +62,8 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
 
   const markDirty = useCallback(
     (keys: string[]) => {
+      // Pour la minuterie : un changement à envoyer à Zotero, c'est du vrai travail.
+      window.dispatchEvent(new Event('biblikube:work'));
       if (syncing.current) keys.forEach((k) => dirtyDuringSync.current.add(k));
       update((p) => ({ ...p, sync: { ...p.sync, pending: [...new Set([...p.sync.pending, ...keys])] } }));
     },

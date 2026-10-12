@@ -1,9 +1,11 @@
 // Minuterie et séances de travail.
 //
 // Seul le temps « actif » compte : chaque geste (clic, touche, défilement…)
-// prolonge la séance ; après 2 minutes sans geste, le compteur se met en pause
-// et la séance s'arrête au dernier geste. Après 30 minutes d'absence, le geste
-// suivant ouvre une nouvelle séance. Rien n'est envoyé ailleurs : les séances
+// prolonge la séance ; après 2 minutes sans geste, le compteur se met en pause.
+// Après 30 minutes d'absence, le geste suivant ouvre une nouvelle séance.
+// Une séance ne compte que s'il s'y passe du vrai travail (décision, classement,
+// note, texte saisi), et s'arrête au dernier travail : revenir simplement
+// regarder une revue terminée ne compte pas. Rien n'est envoyé ailleurs : les séances
 // sont gardées avec la revue (navigateur + sauvegarde Zotero).
 import type { Project, TimeSession } from '../types';
 
@@ -27,6 +29,13 @@ export function recordActivity(log: TimeSession[], now: number, view: string): T
     views: counted ? { ...last.views, [view]: (last.views[view] ?? 0) + counted } : last.views,
   };
   return [...log.slice(0, -1), next];
+}
+
+/** Enregistre un vrai travail (décision, classement, note, texte saisi). */
+export function recordWork(log: TimeSession[], now: number, view: string): TimeSession[] {
+  const next = recordActivity(log, now, view);
+  const last = next[next.length - 1];
+  return [...next.slice(0, -1), { ...last, lastWork: last.end, workMs: last.activeMs }];
 }
 
 /** Une séance affichable : mesurée, ou estimée d'après les dates des décisions. */
@@ -95,12 +104,16 @@ export function estimatePast(p: Project, before = Infinity): SessionRow[] {
 export function sessionRows(p: Project, log: TimeSession[] = p.timeLog ?? []): SessionRow[] {
   const times = decisionTimes(p);
   const measured: SessionRow[] = log
-    .filter((s) => s.activeMs > 0)
     .map((s) => {
       const start = Date.parse(s.start);
-      const end = Date.parse(s.end);
-      return { start, end, activeMs: s.activeMs, views: s.views, estimated: false, decisions: times.filter((t) => t >= start && t <= end).length };
-    });
+      const end = Date.parse(s.lastWork ?? s.end);
+      const activeMs = s.workMs ?? s.activeMs;
+      return { start, end, activeMs, views: s.views, estimated: false, decisions: times.filter((t) => t >= start && t <= end).length, worked: !!s.lastWork };
+    })
+    // Séances sans travail (on est juste venu regarder) : ignorées. Les séances
+    // enregistrées avant ce suivi du travail comptent si elles contiennent des décisions.
+    .filter((r) => r.worked || r.decisions > 0)
+    .map(({ worked: _, ...r }) => r);
   const firstMeasured = log.length ? Date.parse(log[0].start) : Infinity;
   return [...estimatePast(p, firstMeasured), ...measured].sort((a, b) => b.start - a.start);
 }

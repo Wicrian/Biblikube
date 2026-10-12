@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newProject } from '../src/lib/frameworks';
-import { estimatePast, formatDuration, recordActivity, sessionRows, summarize, withoutBursts } from '../src/lib/timeLog';
+import { estimatePast, formatDuration, recordActivity, recordWork, sessionRows, summarize, withoutBursts } from '../src/lib/timeLog';
 import type { TimeSession } from '../src/types';
 
 const T0 = Date.parse('2026-10-12T14:00:00Z');
@@ -53,7 +53,7 @@ describe('minuterie', () => {
       A: { decision: 'include', reasons: [], note: '', at: at(T0 - min(600)) },
       B: { decision: 'exclude', reasons: [], note: '', at: at(T0 + min(5)) },
     };
-    p.timeLog = [{ start: at(T0), end: at(T0 + min(30)), activeMs: min(25), views: { screening: min(25) } }];
+    p.timeLog = [{ start: at(T0), end: at(T0 + min(30)), activeMs: min(25), views: { screening: min(25) }, lastWork: at(T0 + min(30)), workMs: min(25) }];
     const rows = sessionRows(p);
     expect(rows.map((r) => r.estimated)).toEqual([false, true]);
     expect(rows[0].decisions).toBe(1);
@@ -61,6 +61,24 @@ describe('minuterie', () => {
     expect(s.totalMs).toBe(min(26));
     expect(s.estimatedMs).toBe(min(1));
     expect(s.sessions).toBe(2);
+  });
+
+  it('ne compte pas une visite sans travail, et s’arrête au dernier travail', () => {
+    const p = newProject('Test');
+    let log: TimeSession[] = [];
+    log = recordActivity(log, T0, 'screening'); // ouverture
+    log = recordActivity(log, T0 + min(1), 'screening'); // lecture
+    log = recordWork(log, T0 + min(2), 'screening'); // décision
+    log = recordActivity(log, T0 + min(3), 'screening'); // on regarde encore
+    log = recordActivity(log, T0 + min(4), 'screening');
+    // Le lendemain : tri terminé, on vient juste regarder.
+    log = recordActivity(log, T0 + min(1440), 'screening');
+    log = recordActivity(log, T0 + min(1441), 'screening');
+    expect(log).toHaveLength(2);
+    const rows = sessionRows(p, log);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].activeMs).toBe(min(2));
+    expect(rows[0].end).toBe(T0 + min(2));
   });
 
   it('affiche les durées simplement', () => {

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Timer, X } from 'lucide-react';
 import { useProject } from '../store';
 import { saveProject } from '../lib/storage';
-import { formatDuration, recordActivity, sessionRows, summarize } from '../lib/timeLog';
+import { formatDuration, recordActivity, recordWork, sessionRows, summarize } from '../lib/timeLog';
 import type { TimeSession } from '../types';
 import { Portal } from './Portal';
 
@@ -47,7 +47,18 @@ export function useTimeTracker(view: string): TimeSession[] {
         lastMove = now;
       }
       log.current = recordActivity(log.current, now, viewRef.current);
+      // Écrire dans un champ (protocole, note, commentaire), c'est travailler.
+      const t = e.target as HTMLElement | null;
+      if (e.type === 'keydown' && t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) {
+        log.current = recordWork(log.current, now, viewRef.current);
+      }
     };
+    const onWork = () => {
+      if (document.visibilityState !== 'visible') return;
+      log.current = recordWork(log.current, Date.now(), viewRef.current);
+      setLive(log.current);
+    };
+    window.addEventListener('biblikube:work', onWork);
     const events = ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll'];
     events.forEach((t) => window.addEventListener(t, onActivity, { passive: true, capture: true }));
     const onHide = () => document.visibilityState === 'hidden' && flush();
@@ -60,6 +71,7 @@ export function useTimeTracker(view: string): TimeSession[] {
     setLive(log.current);
     return () => {
       events.forEach((t) => window.removeEventListener(t, onActivity, { capture: true }));
+      window.removeEventListener('biblikube:work', onWork);
       document.removeEventListener('visibilitychange', onHide);
       window.removeEventListener('pagehide', flush);
       clearInterval(tick);
@@ -187,6 +199,7 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
             <summary>Comment le temps est-il compté ?</summary>
             <ul>
               <li>Seul le temps où vous utilisez Biblikube compte. Après 2 minutes sans geste (clic, touche, défilement), le compteur se met en pause.</li>
+              <li>Une séance ne compte que si vous y travaillez (décision, classement, note, texte écrit) et s’arrête à votre dernier travail : revenir simplement regarder une revue ne compte pas.</li>
               <li>Une nouvelle séance commence après 30 minutes d’absence.</li>
               <li>
                 Les séances « estimées » sont reconstituées d’après l’heure de vos décisions de tri, avant l’arrivée de la minuterie :
