@@ -214,6 +214,8 @@ export function CircleView({ visible, onAddCategory, onColumns }: { visible: Rec
                 <div key={r.key} className="stack-card behind" style={{ transform: `translate(-50%, -50%) rotate(${i ? -5 : 4}deg) translateY(${(i + 1) * 6}px)` }} />
               ))}
               <div
+                // Une nouvelle carte = un nouveau cadre : sinon l'ancien revenait de la bulle vers le centre.
+                key={cur.key}
                 className={`stack-card top ${drag ? 'dragging' : ''} ${flying ? 'flying' : ''}`}
                 style={{
                   transform: `translate(-50%, -50%) translate(${(flying ?? drag)?.dx ?? 0}px, ${(flying ?? drag)?.dy ?? 0}px) ${flying ? 'scale(0.2)' : drag ? 'rotate(3deg) scale(0.55)' : ''}`,

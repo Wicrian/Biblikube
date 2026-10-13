@@ -535,6 +535,7 @@ details > summary::-webkit-details-marker { display: none; }
   position: fixed; z-index: 100; pointer-events: none; max-width: 260px; padding: 0.55rem 0.75rem; border-radius: 14px;
   background: var(--panel-solid); box-shadow: var(--shadow-lg); font-size: 0.85rem; font-weight: 500; transform: rotate(2deg);
 }
+.drag-ghost.touch { transform: translate(-50%, calc(-100% - 14px)) rotate(2deg); }
 .marker-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .classify { padding: 0.75rem 1rem; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--panel-border); }
 .classify > * + * { margin-top: 0.4rem; }
@@ -570,6 +571,8 @@ details > summary::-webkit-details-marker { display: none; }
 .stack-card.behind { opacity: 0.7; }
 .stack-card.top { cursor: grab; touch-action: none; user-select: none; transition: transform 0.22s ease, opacity 0.22s ease; box-shadow: var(--shadow-lg); }
 .stack-card.top.dragging { cursor: grabbing; transition: none; }
+.stack-card.top:not(.dragging):not(.flying) { animation: stack-in 0.22s ease-out; }
+@keyframes stack-in { from { opacity: 0; scale: 0.94; } }
 .stack-title { font-family: var(--font-head); font-weight: 600; font-size: 1.02rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .stack-abstract { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .stack-empty { position: absolute; transform: translate(-50%, -50%); width: 260px; text-align: center; }

@@ -210,9 +210,7 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
             (x) =>
               `<div class="dec tm"><span>${x.label}</span><div class="bar" style="width:${((x.ms / max) * 100).toFixed(1)}%;background:${t.accent}"></div><span class="num"><b>${formatDuration(x.ms)}</b> · ${n(x.sessions)} séance${x.sessions > 1 ? 's' : ''}</span></div>`,
           )
-          .join('')}<div class="note">Temps actif mesuré seulement sur le tri titre-résumé et l’organisation ; les autres étapes (recherche, doublons, texte intégral) ne sont pas chronométrées.${
-          d.time.estimated ? ' Une partie du temps de tri est estimée d’après l’heure des décisions.' : ''
-        }</div></div>`;
+          .join('')}</div>`;
       })()
     : '';
 
