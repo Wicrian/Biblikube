@@ -523,6 +523,8 @@ function Board() {
       )}
 
       {drag && (
+        // Rendue hors du cadre (Portal) : sinon sa position se calcule par rapport au cadre, pas à l'écran.
+        <Portal>
         <div
           className={`drag-ghost ${drag.grab ? 'touch' : ''}`}
           // Au doigt, la carte garde la place où on l'a prise sous le doigt.
@@ -535,6 +537,7 @@ function Board() {
           {drag.copy ? '＋ ' : ''}
           {p.records[drag.key]?.title}
         </div>
+        </Portal>
       )}
       {openKey && p.records[openKey] && <ClassifyDialog recordKey={openKey} onClose={() => setOpenKey(null)} />}
       {deleting && <DeleteCategoryDialog cat={deleting} onClose={() => setDeleting(null)} />}
