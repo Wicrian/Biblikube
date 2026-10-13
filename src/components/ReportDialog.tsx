@@ -43,6 +43,33 @@ function fontFaces(): string {
   return out;
 }
 
+/** iPad et iPhone : l'impression d'un cadre intégré imprime toute la page (capture d'écran). */
+const isIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+/**
+ * Ouvre la fenêtre d'impression (« Enregistrer au format PDF »). Sur iPad et
+ * iPhone, le rapport est d'abord ouvert seul dans un nouvel onglet, sinon le
+ * système imprime la page entière de Biblikube au lieu du rapport.
+ */
+function printReport(html: string, frame: HTMLIFrameElement | null) {
+  if (!isIOS()) {
+    frame?.contentWindow?.print();
+    return;
+  }
+  const w = window.open('', '_blank');
+  if (!w) {
+    alert('Votre navigateur a bloqué l’ouverture du rapport. Autorisez les fenêtres pour ce site, puis réessayez.');
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  const go = () => setTimeout(() => w.print(), 300);
+  if (w.document.fonts?.ready) void w.document.fonts.ready.then(go);
+  else w.addEventListener('load', go);
+}
+
 export function ReportDialog({ onClose }: { onClose: () => void }) {
   const { project: p, update } = useProject();
   const [comment, setComment] = useState(p.reportComment ?? '');
@@ -88,7 +115,7 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
               />
               <span className="small muted">Il apparaît dans le rapport seulement s’il est rempli. Il est gardé avec la revue.</span>
             </label>
-            <button className="btn primary" onClick={() => frame.current?.contentWindow?.print()}>
+            <button className="btn primary" onClick={() => printReport(html, frame.current)}>
               <FileDown size={16} /> Enregistrer en PDF
             </button>
             <p className="small muted">

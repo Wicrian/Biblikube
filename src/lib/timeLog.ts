@@ -1,15 +1,13 @@
 // Minuterie et séances de travail : le « temps passé dans Biblikube ».
 //
 // Règles (en français simple, reprises dans la fenêtre « Mes séances ») :
-// - Chaque geste (clic, touche, défilement, souris) compte, sur tous les écrans :
-//   hésiter devant un article ou relire la liste des références, c'est travailler.
-//   Après 2 minutes sans geste, pause.
+// - Seuls deux écrans sont chronométrés : le tri titre-résumé (tant qu'il reste
+//   des articles à trier) et l'organisation. Ailleurs, rien n'est compté.
+// - Chaque geste (clic, touche, défilement, souris) compte : hésiter devant un
+//   article fait partie du travail. Après 2 minutes sans geste, pause.
 // - Changer d'onglet ou d'application : si l'on revient dans les 5 minutes, le
 //   temps passé ailleurs compte ; sinon non.
 // - Après 30 minutes d'absence, une nouvelle séance commence.
-// - Ne comptent pas (choix de l'application, voir useTimeTracker) : l'écran de tri
-//   quand il ne reste rien à trier, et le texte intégral (lecture faite dans
-//   Zotero, trop difficile à mesurer pour l'instant).
 // - Une séance de moins d'une minute n'est pas affichée (ouverture par erreur).
 // Rien n'est envoyé ailleurs : les séances sont gardées avec la revue
 // (navigateur + sauvegarde Zotero).
@@ -19,6 +17,10 @@ export const IDLE_MS = 2 * 60_000;
 export const AWAY_MAX_MS = 5 * 60_000;
 /** Séance la plus courte affichée. */
 export const MIN_SESSION_MS = 60_000;
+/** Écrans chronométrés. */
+export const TIMED_VIEWS = ['screening', 'organisation'] as const;
+const timedOnly = (views: Record<string, number>) =>
+  Object.fromEntries(Object.entries(views).filter(([v]) => (TIMED_VIEWS as readonly string[]).includes(v)));
 export const SESSION_GAP_MS = 30 * 60_000;
 
 function extend(last: TimeSession, now: number, counted: number, view: string): TimeSession {
@@ -147,7 +149,10 @@ export function sessionRows(p: Project, log: TimeSession[] = p.timeLog ?? []): S
       const end = Date.parse(s.end);
       const decisions = { screening: 0, fulltext: 0 };
       for (const d of items) if (d.t >= start && d.t <= end) decisions[d.stage]++;
-      const row: SessionRow = { start, end, activeMs: s.activeMs, views: s.views, estimated: false, decisions };
+      // Seuls les écrans chronométrés comptent (des séances plus anciennes peuvent en contenir d'autres).
+      const views = timedOnly(s.views);
+      const activeMs = Object.values(views).reduce((a, ms) => a + ms, 0);
+      const row: SessionRow = { start, end, activeMs, views, estimated: false, decisions };
       return row;
     })
     .filter((r) => r.activeMs >= MIN_SESSION_MS);
@@ -170,6 +175,8 @@ export interface StageSummary {
 
 export interface TimeSummary {
   todayMs: number;
+  /** Temps d'aujourd'hui par écran (pour la pastille du tri et de l'organisation). */
+  todayByView: Record<string, number>;
   weekMs: number;
   totalMs: number;
   estimatedMs: number;
@@ -193,6 +200,12 @@ export function summarize(rows: SessionRow[], now = Date.now()): TimeSummary {
   };
   return {
     todayMs: sum((r) => r.end >= today),
+    todayByView: rows
+      .filter((r) => r.end >= today)
+      .reduce<Record<string, number>>((acc, r) => {
+        for (const [v, ms] of Object.entries(r.views)) acc[v] = (acc[v] ?? 0) + ms;
+        return acc;
+      }, {}),
     weekMs: sum((r) => r.end >= week),
     totalMs: sum(() => true),
     estimatedMs: sum((r) => r.estimated),

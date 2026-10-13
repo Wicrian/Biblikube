@@ -156,8 +156,8 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
     project.mode ? (hasRecords ? (project.mode === 'organise' ? 'organisation' : 'screening') : 'import') : hasRecords ? 'screening' : project.library ? 'import' : 'protocol',
   );
   const [pulse, setPulse] = useState<View | null>(null);
-  // Temps non compté : le tri quand il ne reste rien à trier, et le texte intégral (lu dans Zotero).
-  const measured = view !== 'fulltext' && !(view === 'screening' && !screeningKeys(project).some((k) => !project.screening[k]));
+  // Chronométrés : le tri titre-résumé (tant qu'il reste des articles à trier) et l'organisation.
+  const measured = view === 'organisation' || (view === 'screening' && screeningKeys(project).some((k) => !project.screening[k]));
   const timeLog = useTimeTracker(view, measured);
   const [showSessions, setShowSessions] = useState(false);
   const setView = (v: View) => {
@@ -259,7 +259,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
           <p className="muted hide-mobile">{v.subtitle}</p>
         </div>
         <span className="spacer" />
-        <TimePill log={timeLog} onOpen={() => setShowSessions(true)} />
+        {(view === 'screening' || view === 'organisation') && <TimePill view={view} log={timeLog} onOpen={() => setShowSessions(true)} />}
         <span className="pill" title={syncStatus.message}>
           <span className={`sync-dot ${dotClass}`} /> <span className="hide-mobile">{syncLabel}</span>
         </span>

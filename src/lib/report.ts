@@ -5,6 +5,7 @@ import type { Project } from '../types';
 import { findDuplicateGroups } from './dedup';
 import { categoryLabel, orderedCategories } from './organisation';
 import { fulltextKeys, screeningKeys, setAsideDecisions, setAsideNote } from './prisma';
+import { formatDuration, sessionRows, summarize } from './timeLog';
 import { authorsShort } from './text';
 
 export interface ReportData {
@@ -35,6 +36,8 @@ export interface ReportData {
   reasons: { label: string; count: number }[];
   sources: { name: string; count: number; kind: string }[];
   organiseFirst: boolean;
+  /** Temps passé dans Biblikube (tri titre-résumé et organisation), null si moins d'une minute. */
+  time: { totalMs: number; screeningMs: number; organisationMs: number; sessions: number; estimatedMs: number } | null;
 }
 
 const KIND = { database: 'Base de données', register: 'Registre', other: 'Autre méthode' } as const;
@@ -136,6 +139,12 @@ export function reportData(p: Project, today = new Date()): ReportData {
     reasons,
     sources,
     organiseFirst: p.mode === 'organise',
+    time: (() => {
+      const s = summarize(sessionRows(p));
+      return s.totalMs >= 60_000
+        ? { totalMs: s.totalMs, screeningMs: s.byView.screening ?? 0, organisationMs: s.byView.organisation ?? 0, sessions: s.sessions, estimatedMs: s.estimatedMs }
+        : null;
+    })(),
   };
 }
 
@@ -169,6 +178,14 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
   if (d.duplicates || d.openDuplicates) tiles.push(tile(n(d.duplicates), 'doublons écartés', `${n(d.unique)} références uniques`));
   if (d.screening) tiles.push(tile(n(d.screening.include + d.screening.maybe), 'retenues au tri', `dont ${n(d.screening.maybe)} incertaines`));
   if (d.fulltext) tiles.push(tile(n(d.fulltext.include), 'incluses dans la revue', `${n(d.fulltext.done)} textes intégraux évalués`));
+  if (d.time) {
+    // Arrondi à la minute avant d'additionner : le total correspond au détail affiché.
+    const minute = (ms: number) => Math.round(ms / 60_000) * 60_000;
+    const tri = minute(d.time.screeningMs);
+    const org = minute(d.time.organisationMs);
+    const parts = [tri && `tri ${formatDuration(tri)}`, org && `organisation ${formatDuration(org)}`].filter(Boolean);
+    tiles.push(tile(formatDuration(tri + org), `de travail · ${n(d.time.sessions)} séance${d.time.sessions > 1 ? 's' : ''}`, `${parts.join(' · ')}${d.time.estimatedMs ? ' (en partie estimé)' : ''}`));
+  }
   if (d.plan) tiles.push(tile(`${pct(d.plan.classified, d.plan.pool)} %`, 'classées dans le plan', `${n(d.plan.classified)} sur ${n(d.plan.pool)} ${d.plan.poolLabel}`));
 
   const decisions = d.screening
@@ -230,7 +247,8 @@ ${d.plan.keyArticles.length ? `<div class="card"><h2>Articles clés (marqués «
 @page{size:Letter;margin:.45in 0}
 @page :first{margin-top:0}
 *{box-sizing:border-box}
-body{margin:0;background:#fff linear-gradient(170deg,${t.soft} 0%,#fff 70%) no-repeat;background-size:100% 5in;font-family:'Inter Variable',Inter,system-ui,sans-serif;color:${t.text};font-size:9.4pt;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;position:relative;background:#fff;font-family:'Inter Variable',Inter,system-ui,sans-serif;color:${t.text};font-size:9.4pt;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.bg{position:absolute;top:0;left:0;right:0;height:5in;z-index:-1;background:linear-gradient(170deg,${t.soft} 0%,#fff 70%);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .wrap{max-width:8.5in;margin:0 auto;padding:.45in .5in .3in}
 @media print{.wrap{padding:.45in .5in 0}}
 .top{display:flex;align-items:center;gap:10px}
@@ -270,12 +288,12 @@ td{padding:5px 4px;border-bottom:1px solid ${t.soft};vertical-align:top}.n{text-
 .arr{text-align:center;color:${t.accent};font-weight:700}.out{font-size:7.6pt;color:${t.muted};text-align:center;margin-top:4px}
 .comment p{margin:0;font-size:9.6pt}
 .foot{margin-top:14px;display:flex;font-size:7.6pt;color:${t.muted};border-top:1px solid ${t.soft};padding-top:6px}
-</style></head><body><div class="wrap">
+</style></head><body><div class="bg"></div><div class="wrap">
 <div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">Biblikube</span><span class="sp"></span><span class="pill">Point d’étape · ${d.date}</span></div>
 <div class="eyebrow">${d.modeLabel} · point d’étape</div>
 <h1>${esc(d.name)}</h1>
 ${d.question ? `<div class="q"><b>Question de recherche</b>${esc(d.question)}</div>` : ''}
 ${body}
-<div class="foot">Généré par Biblikube · données lues dans Zotero le ${d.date}<span class="sp"></span>Ambiance « ${esc(t.name)} »</div>
+<div class="foot">Généré par Biblikube · données lues dans Zotero le ${d.date}</div>
 </div></body></html>`;
 }

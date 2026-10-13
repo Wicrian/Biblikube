@@ -65,7 +65,7 @@ describe('minuterie', () => {
     expect(rows.map((r) => r.estimated)).toEqual([false, true]);
     expect(rows[0].decisions).toEqual({ screening: 3, fulltext: 1 });
     const s = summarize(rows, T0 + min(40));
-    expect(s.totalMs).toBe(min(26));
+    expect(s.totalMs).toBe(min(16)); // les 10 min sur les Références ne sont pas chronométrées
     expect(s.estimatedMs).toBe(min(1));
     expect(s.sessions).toBe(2);
     expect(s.screening).toMatchObject({ ms: min(16), decisions: 4 });
@@ -78,14 +78,15 @@ describe('minuterie', () => {
     expect(setAsideNote({ duplicates: 0, removed: 1 }, 'fulltext').text).toBe('1 article déjà évalué a ensuite été retiré de la collection Zotero');
   });
 
-  it('compte l’hésitation et la consultation, mais pas une ouverture de quelques secondes', () => {
+  it('compte le tri et l’organisation, pas les autres écrans ni une ouverture de quelques secondes', () => {
     const p = newProject('Test');
     let log: TimeSession[] = [];
     log = recordActivity(log, T0, 'screening'); // ouverture
     log = recordActivity(log, T0 + min(1), 'screening'); // lecture, hésitation
     log = recordActivity(log, T0 + min(2), 'screening');
-    // Le lendemain : 6 minutes à relire la liste des références.
-    for (let i = 0; i <= 6; i++) log = recordActivity(log, T0 + min(1440 + i), 'records');
+    // Le lendemain : 6 minutes d'organisation, puis 5 minutes sur la liste des références.
+    for (let i = 0; i <= 6; i++) log = recordActivity(log, T0 + min(1440 + i), 'organisation');
+    for (let i = 7; i <= 11; i++) log = recordActivity(log, T0 + min(1440 + i), 'records');
     // Le surlendemain : ouverte 20 secondes par erreur.
     log = recordActivity(log, T0 + min(2880), 'records');
     log = recordActivity(log, T0 + min(2880) + 20_000, 'records');

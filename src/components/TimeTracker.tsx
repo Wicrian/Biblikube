@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Timer, X } from 'lucide-react';
 import { useProject } from '../store';
 import { saveProject } from '../lib/storage';
-import { formatDuration, recordActivity, recordReturn, sessionRows, summarize, totalDecisions } from '../lib/timeLog';
+import { formatDuration, recordActivity, recordReturn, sessionRows, summarize } from '../lib/timeLog';
 import { setAsideDecisions, setAsideNote } from '../lib/prisma';
 import type { TimeSession } from '../types';
 import { Portal } from './Portal';
@@ -110,13 +110,13 @@ export function useTimeTracker(view: string, measured: boolean): TimeSession[] {
 }
 
 /** Petite pastille « ⏱ 42 min aujourd'hui » dans l'en-tête. */
-export function TimePill({ log, onOpen }: { log: TimeSession[]; onOpen: () => void }) {
+export function TimePill({ view, log, onOpen }: { view: 'screening' | 'organisation'; log: TimeSession[]; onOpen: () => void }) {
   const { project } = useProject();
   const s = useMemo(() => summarize(sessionRows(project, log)), [project, log]);
   return (
     <button className="pill time-pill" onClick={onOpen} title="Mes séances de travail">
-      <Timer size={15} /> <span>{formatDuration(s.todayMs)}</span>
-      <span className="hide-mobile">aujourd’hui</span>
+      <Timer size={15} /> <span>{formatDuration(s.todayByView[view] ?? 0)}</span>
+      <span className="hide-mobile">{view === 'screening' ? 'de tri' : 'd’organisation'} aujourd’hui</span>
     </button>
   );
 }
@@ -134,10 +134,10 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
   const s = summarize(rows);
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.slice(0, 8);
-  const decided = { screening: Object.keys(project.screening).length, fulltext: Object.keys(project.fulltext).length };
+  const decided = { screening: Object.keys(project.screening).length };
   const aside = setAsideNote(setAsideDecisions(project, 'screening'), 'screening');
   const stages = Object.entries(s.byView)
-    .filter(([v, ms]) => ms >= 30_000 && v !== 'fulltext')
+    .filter(([, ms]) => ms >= 30_000)
     .sort((a, b) => b[1] - a[1]);
   const mainView = (v: Record<string, number>) => {
     const top = Object.entries(v).sort((a, b) => b[1] - a[1])[0];
@@ -178,7 +178,7 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
             </div>
           </div>
 
-          {(stages.length > 0 || decided.fulltext > 0) && (
+          {stages.length > 0 && (
             <div className="sessions-stages">
               <div className="small muted">Par étape</div>
               {stages.map(([v, ms]) => (
@@ -191,15 +191,6 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
                   </span>
                 </div>
               ))}
-              {decided.fulltext > 0 && (
-                <div className="sessions-stage">
-                  <strong>{labels.fulltext ?? 'Texte intégral'}</strong>
-                  <span className="muted">non mesuré</span>
-                  <span className="muted small">
-                    {decided.fulltext} décision{decided.fulltext > 1 ? 's' : ''} prise{decided.fulltext > 1 ? 's' : ''} · la lecture se fait dans Zotero
-                  </span>
-                </div>
-              )}
               {aside.n > 0 && (
                 <div className="small muted">
                   ℹ️ {aside.text}. Leurs décisions restent comptées ici, car le travail a été fait, mais plus dans l’avancement du tri.
@@ -218,7 +209,7 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
                     <th>Jour</th>
                     <th>Heures</th>
                     <th>Temps actif</th>
-                    <th>Décisions</th>
+                    <th>Décisions de tri</th>
                     <th className="hide-mobile">Surtout</th>
                   </tr>
                 </thead>
@@ -233,7 +224,7 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
                         {hour(r.start)} – {hour(r.end)}
                       </td>
                       <td>{formatDuration(r.activeMs)}</td>
-                      <td>{totalDecisions(r) || '—'}</td>
+                      <td>{r.decisions.screening || '—'}</td>
                       <td className="hide-mobile">{mainView(r.views) || '—'}</td>
                     </tr>
                   ))}
@@ -251,21 +242,21 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
             <summary>Comment le temps est-il compté ?</summary>
             <ul>
               <li>
-                Chaque geste compte (clic, touche, défilement, souris), sur tous les écrans : hésiter devant un article ou relire la
-                liste des références fait partie du travail. Après 2 minutes sans aucun geste, le compteur se met en pause.
+                Seuls deux écrans sont chronométrés : le tri titre-résumé (tant qu’il reste des articles à trier) et l’organisation.
+                Les autres étapes ne sont pas comptées.
+              </li>
+              <li>
+                Chaque geste compte (clic, touche, défilement, souris) : hésiter devant un article fait partie du travail. Après 2
+                minutes sans aucun geste, le compteur se met en pause.
               </li>
               <li>
                 Si vous allez dans un autre onglet ou une autre application et revenez dans les 5 minutes, ce temps compte. Sinon, il
-                ne compte pas.
-              </li>
-              <li>
-                Ne comptent pas : l’écran de tri quand il ne reste plus rien à trier, et le texte intégral (la lecture se fait dans
-                Zotero, trop difficile à mesurer pour l’instant). Une séance de moins d’une minute n’est pas affichée.
+                ne compte pas. Une séance de moins d’une minute n’est pas affichée.
               </li>
               <li>Une nouvelle séance commence après 30 minutes d’absence.</li>
               <li>
                 Toutes les décisions prises comptent, même sur des références écartées ensuite (doublons, références retirées) : le
-                travail a été fait. Un article inclus au tri puis décidé au texte intégral compte une fois dans chaque étape.
+                travail a été fait.
               </li>
               <li>
                 Les séances « estimées » sont reconstituées d’après l’heure de vos décisions de tri, avant l’arrivée de la minuterie :
