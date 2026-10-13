@@ -48,12 +48,23 @@ export function setAsideDecisions(p: Project, stage: 'screening' | 'fulltext'): 
   return { duplicates, removed };
 }
 
-/** « 2 doublons et 1 référence retirée » */
-export function setAsideText(a: { duplicates: number; removed: number }): string {
-  const parts = [];
-  if (a.duplicates) parts.push(`${a.duplicates} marquée${a.duplicates > 1 ? 's' : ''} ensuite comme doublon${a.duplicates > 1 ? 's' : ''}`);
-  if (a.removed) parts.push(`${a.removed} retirée${a.removed > 1 ? 's' : ''} ensuite de la revue`);
-  return parts.join(' et ');
+/**
+ * Phrase courte sur les décisions prises sur des articles écartés ensuite, ex.
+ * « 3 articles déjà triés ont ensuite été marqués comme doublons ». `n` : nombre
+ * d'articles (0 : rien à signaler).
+ */
+export function setAsideNote(a: { duplicates: number; removed: number }, stage: 'screening' | 'fulltext'): { n: number; text: string } {
+  const n = a.duplicates + a.removed;
+  if (!n) return { n, text: '' };
+  const pl = n > 1;
+  const done = stage === 'screening' ? (pl ? 'déjà triés' : 'déjà trié') : pl ? 'déjà évalués' : 'déjà évalué';
+  const head = `${n} article${pl ? 's' : ''} ${done} ${pl ? 'ont' : 'a'} ensuite été`;
+  if (!a.removed) return { n, text: `${head} marqué${pl ? 's' : ''} comme doublon${pl ? 's' : ''}` };
+  if (!a.duplicates) return { n, text: `${head} retiré${pl ? 's' : ''} de la collection Zotero` };
+  return {
+    n,
+    text: `${head} écartés (${a.duplicates} doublon${a.duplicates > 1 ? 's' : ''}, ${a.removed} retiré${a.removed > 1 ? 's' : ''} de la collection Zotero)`,
+  };
 }
 
 export interface Column {

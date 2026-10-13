@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newProject } from '../src/lib/frameworks';
 import { estimatePast, formatDuration, recordActivity, recordReturn, sessionRows, summarize, withoutBursts } from '../src/lib/timeLog';
-import { setAsideDecisions, setAsideText } from '../src/lib/prisma';
+import { setAsideDecisions, setAsideNote } from '../src/lib/prisma';
 import type { TimeSession } from '../src/types';
 
 const T0 = Date.parse('2026-10-12T14:00:00Z');
@@ -71,7 +71,11 @@ describe('minuterie', () => {
     expect(s.screening).toMatchObject({ ms: min(16), decisions: 4 });
     expect(s.fulltext).toMatchObject({ ms: 0, decisions: 1 }); // temps du texte intégral non mesuré
     expect(setAsideDecisions(p, 'screening')).toEqual({ duplicates: 1, removed: 1 });
-    expect(setAsideText({ duplicates: 1, removed: 1 })).toBe('1 marquée ensuite comme doublon et 1 retirée ensuite de la revue');
+    expect(setAsideNote({ duplicates: 1, removed: 1 }, 'screening').text).toBe(
+      '2 articles déjà triés ont ensuite été écartés (1 doublon, 1 retiré de la collection Zotero)',
+    );
+    expect(setAsideNote({ duplicates: 3, removed: 0 }, 'screening').text).toBe('3 articles déjà triés ont ensuite été marqués comme doublons');
+    expect(setAsideNote({ duplicates: 0, removed: 1 }, 'fulltext').text).toBe('1 article déjà évalué a ensuite été retiré de la collection Zotero');
   });
 
   it('compte l’hésitation et la consultation, mais pas une ouverture de quelques secondes', () => {

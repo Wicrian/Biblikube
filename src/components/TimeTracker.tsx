@@ -5,7 +5,7 @@ import { Timer, X } from 'lucide-react';
 import { useProject } from '../store';
 import { saveProject } from '../lib/storage';
 import { formatDuration, recordActivity, recordReturn, sessionRows, summarize, totalDecisions } from '../lib/timeLog';
-import { setAsideDecisions, setAsideText } from '../lib/prisma';
+import { setAsideDecisions, setAsideNote } from '../lib/prisma';
 import type { TimeSession } from '../types';
 import { Portal } from './Portal';
 
@@ -135,7 +135,7 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.slice(0, 8);
   const decided = { screening: Object.keys(project.screening).length, fulltext: Object.keys(project.fulltext).length };
-  const aside = setAsideText(setAsideDecisions(project, 'screening'));
+  const aside = setAsideNote(setAsideDecisions(project, 'screening'), 'screening');
   const stages = Object.entries(s.byView)
     .filter(([v, ms]) => ms >= 30_000 && v !== 'fulltext')
     .sort((a, b) => b[1] - a[1]);
@@ -200,7 +200,11 @@ export function SessionsDialog({ log, labels, onClose }: { log: TimeSession[]; l
                   </span>
                 </div>
               )}
-              {aside && <div className="small muted">ℹ️ Parmi les décisions de tri prises, {aside} : le travail compte ici, mais plus dans l’avancement du tri.</div>}
+              {aside.n > 0 && (
+                <div className="small muted">
+                  ℹ️ {aside.text}. Leurs décisions restent comptées ici, car le travail a été fait, mais plus dans l’avancement du tri.
+                </div>
+              )}
             </div>
           )}
 

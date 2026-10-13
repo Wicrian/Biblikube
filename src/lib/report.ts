@@ -4,7 +4,7 @@
 import type { Project } from '../types';
 import { findDuplicateGroups } from './dedup';
 import { categoryLabel, orderedCategories } from './organisation';
-import { fulltextKeys, screeningKeys, setAsideDecisions, setAsideText } from './prisma';
+import { fulltextKeys, screeningKeys, setAsideDecisions, setAsideNote } from './prisma';
 import { authorsShort } from './text';
 
 export interface ReportData {
@@ -53,7 +53,7 @@ export function reportData(p: Project, today = new Date()): ReportData {
   const usesFulltext = p.mode !== 'organise' && (fd.length > 0 || Object.keys(p.notRetrieved).length > 0);
 
   const screening = usesScreening
-    ? { total: sk.length, include: sd.filter((d) => d === 'include').length, exclude: sd.filter((d) => d === 'exclude').length, maybe: sd.filter((d) => d === 'maybe').length, aside: setAsideText(setAsideDecisions(p, 'screening')) }
+    ? { total: sk.length, include: sd.filter((d) => d === 'include').length, exclude: sd.filter((d) => d === 'exclude').length, maybe: sd.filter((d) => d === 'maybe').length, aside: setAsideNote(setAsideDecisions(p, 'screening'), 'screening').text }
     : null;
   const notRetrieved = fk.filter((k) => k in p.notRetrieved).length;
   const fulltext = usesFulltext
@@ -183,7 +183,7 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
         return `<div class="card"><h2>Décisions du tri titre-résumé</h2>${rows
           .map(([l, v, c]) => `<div class="dec"><span>${l}</span><div class="bar" style="width:${((v / max) * 100).toFixed(1)}%;background:${c}"></div><span class="num"><b>${n(v)}</b> · ${pct(v, tot)} %</span></div>`)
           .join('')}<div class="note">Sur ${n(tot)} références triées.${
-          d.screening.aside ? ` D’autres décisions ont été prises sur des références écartées depuis (${esc(d.screening.aside)}) : elles ne sont pas comptées ici.` : ''
+          d.screening.aside ? ` À noter : ${esc(d.screening.aside)} ; ils ne sont pas comptés ici.` : ''
         }</div></div>`;
       })()
     : '';
