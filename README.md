@@ -179,8 +179,11 @@ est jeune et peut encore changer ; la version 1.0 sera la première version « s
 **0.2 — octobre 2026**
 - LitFlow devient **Biblikube**, avec son logo (le cube, par Maude Leblanc-Côté). Les revues déjà commencées
   continuent de fonctionner.
-- **Minuterie et séances** : temps de travail actif (pause après 2 min sans geste), liste des séances, estimation des
-  séances passées d’après l’heure des décisions.
+- **Minuterie et séances** sur le tri titre-résumé et l’organisation : temps de travail actif (pause après 2 min sans
+  geste), liste des séances, estimation des séances passées d’après l’heure des décisions. Les décisions prises sur
+  des articles écartés ensuite (doublons, retirés) sont signalées.
+- iPad et tablettes : PDF enregistré correctement, cartes qui glissent sans « retour en arrière », glisser au doigt
+  dans les colonnes (appui long).
 - Démarrage guidé en 3 questions, menu adapté à votre usage et guide « Pour bien démarrer ».
 - « État d’avancement » en PDF pour faire le point avec sa direction, aux couleurs de l’ambiance, avec le temps de travail par étape.
 - Doublons plus faciles à départager (titre du livre, pages, ISBN, différences surlignées, notes) ; notes Zotero et
