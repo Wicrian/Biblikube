@@ -535,7 +535,7 @@ details > summary::-webkit-details-marker { display: none; }
   position: fixed; z-index: 100; pointer-events: none; max-width: 260px; padding: 0.55rem 0.75rem; border-radius: 14px;
   background: var(--panel-solid); box-shadow: var(--shadow-lg); font-size: 0.85rem; font-weight: 500; transform: rotate(2deg);
 }
-.drag-ghost.touch { transform: translate(-50%, calc(-100% - 14px)) rotate(2deg); }
+.drag-ghost.touch { transform: rotate(1.5deg); transform-origin: top left; }
 .marker-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .classify { padding: 0.75rem 1rem; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--panel-border); }
 .classify > * + * { margin-top: 0.4rem; }

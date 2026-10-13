@@ -31,6 +31,9 @@ import { Portal } from './Portal';
 type Scope = 'review' | 'screening' | 'all' | 'excluded';
 const NONE = '__none';
 
+/** Prise d'une carte au doigt : position du doigt dans la carte, et largeur de la carte. */
+type Grab = { dx: number; dy: number; width: number };
+
 export function Organisation() {
   const { project: p } = useProject();
   if (!p.organisation.name) return <OrganisationSetup />;
@@ -229,8 +232,8 @@ function Board() {
   const [q, setQ] = useState('');
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
-  const [drag, setDrag] = useState<{ key: string; from: string; x: number; y: number; over: string | null; copy: boolean; touch?: boolean } | null>(null);
-  const dragStart = useRef<{ key: string; from: string; x: number; y: number; touch?: boolean } | null>(null);
+  const [drag, setDrag] = useState<{ key: string; from: string; x: number; y: number; over: string | null; copy: boolean; grab?: Grab } | null>(null);
+  const dragStart = useRef<{ key: string; from: string; x: number; y: number; grab?: Grab } | null>(null);
   const dragRef = useRef<typeof drag>(null);
   dragRef.current = drag;
   // Au doigt : un appui long (0,35 s) attrape la carte ; un simple toucher ouvre le menu de classement.
@@ -289,7 +292,7 @@ function Board() {
       if (!s) return;
       if (!dragRef.current && Math.hypot(e.clientX - s.x, e.clientY - s.y) < 6) return;
       const over = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.closest<HTMLElement>('[data-drop]')?.dataset.drop ?? null;
-      const next = { key: s.key, from: s.from, x: e.clientX, y: e.clientY, over, copy: e.altKey || e.ctrlKey || e.metaKey, touch: s.touch };
+      const next = { key: s.key, from: s.from, x: e.clientX, y: e.clientY, over, copy: e.altKey || e.ctrlKey || e.metaKey, grab: s.grab };
       dragRef.current = next;
       setDrag(next);
     };
@@ -483,11 +486,14 @@ function Board() {
                       return;
                     }
                     const { clientX: x, clientY: y } = e;
+                    // Endroit où le doigt a pris la carte : elle restera à la même place sous le doigt.
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const grab: Grab = { dx: x - rect.left, dy: y - rect.top, width: rect.width };
                     const lp = { key: r.key, from: col.id, x, y, fired: false, timer: 0 };
                     lp.timer = window.setTimeout(() => {
                       lp.fired = true;
-                      dragStart.current = { key: lp.key, from: lp.from, x, y, touch: true };
-                      const next = { key: lp.key, from: lp.from, x, y, over: col.id, copy: false, touch: true };
+                      dragStart.current = { key: lp.key, from: lp.from, x, y, grab };
+                      const next = { key: lp.key, from: lp.from, x, y, over: col.id, copy: false, grab };
                       dragRef.current = next;
                       setDrag(next);
                       navigator.vibrate?.(15);
@@ -518,9 +524,13 @@ function Board() {
 
       {drag && (
         <div
-          className={`drag-ghost ${drag.touch ? 'touch' : ''}`}
-          // Au doigt, la carte est centrée juste au-dessus du doigt (visible, pas décalée sur le côté).
-          style={drag.touch ? { left: drag.x, top: drag.y } : { left: drag.x + 12, top: drag.y + 12 }}
+          className={`drag-ghost ${drag.grab ? 'touch' : ''}`}
+          // Au doigt, la carte garde la place où on l'a prise sous le doigt.
+          style={
+            drag.grab
+              ? { left: drag.x - drag.grab.dx, top: drag.y - drag.grab.dy, width: drag.grab.width, maxWidth: 'none' }
+              : { left: drag.x + 12, top: drag.y + 12 }
+          }
         >
           {drag.copy ? '＋ ' : ''}
           {p.records[drag.key]?.title}
