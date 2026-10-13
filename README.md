@@ -182,7 +182,7 @@ est jeune et peut encore changer ; la version 1.0 sera la première version « s
 - **Minuterie et séances** : temps de travail actif (pause après 2 min sans geste), liste des séances, estimation des
   séances passées d’après l’heure des décisions.
 - Démarrage guidé en 3 questions, menu adapté à votre usage et guide « Pour bien démarrer ».
-- « Point d’étape » en PDF pour faire le point avec sa direction, aux couleurs de l’ambiance.
+- « État d’avancement » en PDF pour faire le point avec sa direction, aux couleurs de l’ambiance, avec le temps de travail par étape.
 - Doublons plus faciles à départager (titre du livre, pages, ISBN, différences surlignées, notes) ; notes Zotero et
   surlignages des PDF visibles dans les cartes.
 - Organisation par catégories, sous-catégories et marqueurs, vue « Tri en cercle », onglet « Toutes », trois façons
@@ -242,7 +242,7 @@ Le dossier `dist/` produit par `npm run build` peut aussi être déposé sur n�
 - [x] Organisation : catégories, sous-catégories et marqueurs, vue en cercle et en colonnes, onglet « Toutes »,
       trois façons de créer son plan (proposé, coller son plan, partir de zéro)
 - [x] Démarrage guidé : 3 questions (usage, Zotero, aperçu), menu adapté à l’usage, guide « Pour bien démarrer »
-- [x] « Point d’étape » en PDF aux couleurs de l’ambiance, avec commentaire facultatif
+- [x] « État d’avancement » en PDF aux couleurs de l’ambiance, avec commentaire facultatif
 - [x] FAQ « Sécurité et confidentialité » sur l’accueil
 - [x] Cinq ambiances de couleurs : innovation, classique, moderne, chaleureux, plein air
 - [x] Import des décisions Rayyan ; type de chaque source (base de données / autre méthode)
@@ -256,7 +256,7 @@ Le dossier `dist/` produit par `npm run build` peut aussi être déposé sur n�
 - [ ] Recherche : profils Érudit et Cairn corrigés, vérification des équations avec des « articles témoins »
 - [ ] Écran « Bon retour » pour reprendre là où on s’était arrêté
 - [ ] Empêcher le changement de bibliothèque Zotero en cours de revue, ou « déménager » proprement la revue
-- [ ] Point d’étape exportable en Word
+- [ ] État d’avancement exportable en Word
 
 **Idées pour plus tard**
 

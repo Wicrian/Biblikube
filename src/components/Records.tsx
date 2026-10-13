@@ -61,7 +61,7 @@ export function Records() {
             Exporter CSV (Excel)
           </button>
           <button className="btn small primary" onClick={() => setReport(true)}>
-            Point d’étape (PDF)
+            État d’avancement (PDF)
           </button>
           <button className="btn small" onClick={() => exportProjectJson(p)}>
             Sauvegarder le projet (.json)

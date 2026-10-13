@@ -42,7 +42,7 @@ describe('parcours et guide', () => {
 import { reportData, reportHtml } from '../src/lib/report';
 import { fromTemplate, setAssignment, toggleMarker } from '../src/lib/organisation';
 
-describe('rapport « Point d’étape »', () => {
+describe('rapport « État d’avancement »', () => {
   const theme = { accent: '#8b6cf0', soft: '#ebe5fd', include: '#2f9a72', exclude: '#d4506f', maybe: '#c98a1d', text: '#222', muted: '#666', name: 'Innovation' };
   it('s’adapte : sans tri ni plan, ni décisions ni organisation', () => {
     const p = { ...demoProject(), mode: 'organise' as const };

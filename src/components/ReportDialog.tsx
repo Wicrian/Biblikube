@@ -1,4 +1,4 @@
-// Rapport « Point d'étape » : aperçu, commentaire facultatif, puis
+// Rapport « État d'avancement » : aperçu, commentaire facultatif, puis
 // « Enregistrer en PDF » via la fenêtre d'impression du navigateur.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -78,7 +78,7 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
   const theme = useMemo(currentTheme, []);
   const html = useMemo(() => reportHtml(reportData({ ...p, reportComment: comment }), theme, fonts, new URL('logo.png', document.baseURI).href), [p, comment, theme, fonts]);
 
-  // Coche « Faire un point d'étape » dans le guide.
+  // Coche « Faire un état d'avancement » dans le guide.
   useEffect(() => {
     update((cur) => (cur.guide?.active && !cur.guide.visited.includes('report') ? { ...cur, guide: { ...cur.guide, visited: [...cur.guide.visited, 'report'] } } : cur));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +95,7 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
         <div className="report-dialog" onClick={(e) => e.stopPropagation()}>
           <div className="report-side stack">
             <div className="row">
-              <h2 style={{ margin: 0 }}>Point d’étape</h2>
+              <h2 style={{ margin: 0 }}>État d’avancement</h2>
               <span className="spacer" />
               <button className="btn small" onClick={onClose} title="Fermer">
                 <X size={15} />
@@ -122,7 +122,7 @@ export function ReportDialog({ onClose }: { onClose: () => void }) {
               Dans la fenêtre qui s’ouvre, choisissez <strong>« Enregistrer au format PDF »</strong> comme destination.
             </p>
           </div>
-          <iframe ref={frame} className="report-frame" title="Aperçu du point d’étape" srcDoc={html} />
+          <iframe ref={frame} className="report-frame" title="Aperçu de l’état d’avancement" srcDoc={html} />
         </div>
       </div>
     </Portal>

@@ -1,4 +1,4 @@
-// Rapport « Point d'étape » : les chiffres de la revue, puis une page HTML
+// Rapport « État d'avancement » : les chiffres de la revue, puis une page HTML
 // imprimable (Enregistrer en PDF) aux couleurs de l'ambiance choisie.
 
 import type { Project } from '../types';
@@ -254,7 +254,7 @@ ${d.plan.keyArticles.length ? `<div class="card"><h2>Articles clés (marqués «
   const tail = `<div class="grid2">${reasons}${sources}</div>`;
   const body = d.organiseFirst ? `${progress}${orgSection}${tail}${comment}` : `${progress}${tail}${orgSection}${comment}`;
 
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Point d’étape – ${esc(d.name)}</title><style>${fontCss}
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>État d’avancement – ${esc(d.name)}</title><style>${fontCss}
 @page{size:Letter;margin:.45in 0}
 @page :first{margin-top:0}
 *{box-sizing:border-box}

@@ -237,7 +237,7 @@ export interface Project {
   mode?: ReviewMode;
   /** Accueil et guide « Pour bien démarrer ». */
   guide?: GuideState;
-  /** Commentaire personnel ajouté au rapport « Point d'étape ». */
+  /** Commentaire personnel ajouté au rapport « État d'avancement ». */
   reportComment?: string;
   /** Séances de travail mesurées dans l'application (minuterie). */
   timeLog?: TimeSession[];

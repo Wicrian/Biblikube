@@ -57,7 +57,7 @@ export function guideSteps(p: Project, openDuplicates: number): GuideStep[] {
   add({ id: 'classify', label: 'Classer 5 articles', hint: 'Glissez chaque carte vers une bulle.', view: 'organisation', done: classified >= 5 });
   add({
     id: 'report',
-    label: 'Faire un point d’étape (PDF)',
+    label: 'Faire un état d’avancement (PDF)',
     hint: 'Pour montrer où vous en êtes, avec un commentaire. Ex. : « Prochaine rencontre avec ma direction le 20 octobre. Question : faut-il garder les rapports gouvernementaux ? »',
     view: 'records',
     done: visited.includes('report'),

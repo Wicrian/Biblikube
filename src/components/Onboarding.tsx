@@ -100,7 +100,7 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
               <Demo kind="dedup" title="Doublons" text="Choisissez la notice à garder : celle qui a vos notes est proposée." />
               {mode !== 'organise' && <Demo kind="swipe" title="Tri" text="Glissez la carte : → garder, ← écarter, ↑ incertain." />}
               <Demo kind="circle" title="Organisation" text="Glissez chaque article vers une bulle de votre plan." />
-              <Demo kind="report" title="Point d’étape" text="Un PDF pour montrer où vous en êtes, avec votre commentaire." />
+              <Demo kind="report" title="État d’avancement" text="Un PDF pour montrer où vous en êtes, avec votre commentaire." />
             </div>
             <div className="row">
               <button className="btn small" onClick={() => setStep('zotero')}>
