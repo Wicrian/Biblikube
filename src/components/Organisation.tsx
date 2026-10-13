@@ -233,6 +233,8 @@ function Board() {
   const dragStart = useRef<{ key: string; from: string; x: number; y: number } | null>(null);
   const dragRef = useRef<typeof drag>(null);
   dragRef.current = drag;
+  // Au doigt : un appui long (0,35 s) attrape la carte ; un simple toucher ouvre le menu de classement.
+  const longPress = useRef<{ timer: number; key: string; from: string; x: number; y: number; fired: boolean } | null>(null);
 
   const setOrg = (fn: (o: Org) => Org, dirtyKeys: string[] = []) => {
     update((cur) => ({ ...cur, organisation: fn(cur.organisation) }));
@@ -274,9 +276,15 @@ function Board() {
     ...cats.map((c) => ({ id: c.id, cat: c, items: visible.filter((r) => (o.assignments[r.key] ?? []).includes(c.id)) })),
   ];
 
-  // ---- Glisser-déposer (souris) ; au doigt : toucher une carte ouvre le menu de classement ----
+  // ---- Glisser-déposer : à la souris, ou au doigt après un appui long ----
   useEffect(() => {
     const move = (e: PointerEvent) => {
+      const lp = longPress.current;
+      // Le doigt bouge avant la fin de l'appui long : c'est un défilement, pas une prise.
+      if (lp && !lp.fired && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 8) {
+        clearTimeout(lp.timer);
+        longPress.current = null;
+      }
       const s = dragStart.current;
       if (!s) return;
       if (!dragRef.current && Math.hypot(e.clientX - s.x, e.clientY - s.y) < 6) return;
@@ -286,6 +294,11 @@ function Board() {
       setDrag(next);
     };
     const up = () => {
+      const lp = longPress.current;
+      if (lp && !lp.fired) {
+        clearTimeout(lp.timer);
+        longPress.current = null;
+      }
       const s = dragStart.current;
       const d = dragRef.current;
       dragStart.current = null;
@@ -301,11 +314,26 @@ function Board() {
         return moveToCategory(org, d.key, d.copy || d.from === NONE ? null : d.from, to);
       }, [d.key]);
     };
+    // Pendant un glissement au doigt, la page ne doit pas défiler.
+    const noScroll = (e: TouchEvent) => {
+      if (dragRef.current || longPress.current?.fired) e.preventDefault();
+    };
+    const cancel = () => {
+      if (longPress.current) clearTimeout(longPress.current.timer);
+      longPress.current = null;
+      dragStart.current = null;
+      dragRef.current = null;
+      setDrag(null);
+    };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', cancel);
+    window.addEventListener('touchmove', noScroll, { passive: false });
     return () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('touchmove', noScroll);
     };
   });
 
@@ -450,10 +478,31 @@ function Board() {
                   r={r}
                   dragging={drag?.key === r.key && drag.from === col.id}
                   onPointerDown={(e) => {
-                    if (e.pointerType !== 'mouse') return;
-                    dragStart.current = { key: r.key, from: col.id, x: e.clientX, y: e.clientY };
+                    if (e.pointerType === 'mouse') {
+                      dragStart.current = { key: r.key, from: col.id, x: e.clientX, y: e.clientY };
+                      return;
+                    }
+                    const { clientX: x, clientY: y } = e;
+                    const lp = { key: r.key, from: col.id, x, y, fired: false, timer: 0 };
+                    lp.timer = window.setTimeout(() => {
+                      lp.fired = true;
+                      dragStart.current = { key: lp.key, from: lp.from, x, y };
+                      const next = { key: lp.key, from: lp.from, x, y, over: col.id, copy: false };
+                      dragRef.current = next;
+                      setDrag(next);
+                      navigator.vibrate?.(15);
+                    }, 350);
+                    longPress.current = lp;
                   }}
-                  onTap={(e) => e.pointerType !== 'mouse' && setOpenKey(r.key)}
+                  onTap={(e) => {
+                    if (e.pointerType === 'mouse') return;
+                    // Après un appui long (glissement), pas de menu.
+                    if (longPress.current?.fired) {
+                      longPress.current = null;
+                      return;
+                    }
+                    setOpenKey(r.key);
+                  }}
                 />
               ))}
               {col.items.length > 200 && <div className="small muted">… et {col.items.length - 200} autres (utilisez les filtres)</div>}

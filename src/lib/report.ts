@@ -37,7 +37,7 @@ export interface ReportData {
   sources: { name: string; count: number; kind: string }[];
   organiseFirst: boolean;
   /** Temps passé dans Biblikube (tri titre-résumé et organisation), null si moins d'une minute. */
-  time: { totalMs: number; screeningMs: number; organisationMs: number; sessions: number; estimatedMs: number } | null;
+  time: { stages: { label: string; ms: number; sessions: number }[]; estimated: boolean } | null;
 }
 
 const KIND = { database: 'Base de données', register: 'Registre', other: 'Autre méthode' } as const;
@@ -140,10 +140,15 @@ export function reportData(p: Project, today = new Date()): ReportData {
     sources,
     organiseFirst: p.mode === 'organise',
     time: (() => {
-      const s = summarize(sessionRows(p));
-      return s.totalMs >= 60_000
-        ? { totalMs: s.totalMs, screeningMs: s.byView.screening ?? 0, organisationMs: s.byView.organisation ?? 0, sessions: s.sessions, estimatedMs: s.estimatedMs }
-        : null;
+      const rows = sessionRows(p);
+      const s = summarize(rows);
+      const stage = (view: string, label: string) => ({
+        label,
+        ms: Math.round((s.byView[view] ?? 0) / 60_000) * 60_000,
+        sessions: rows.filter((r) => (r.views[view] ?? 0) > 0).length,
+      });
+      const stages = [stage('screening', 'Tri titre-résumé'), stage('organisation', 'Organisation')].filter((x) => x.ms >= 60_000);
+      return stages.length ? { stages, estimated: s.estimatedMs > 0 } : null;
     })(),
   };
 }
@@ -178,14 +183,6 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
   if (d.duplicates || d.openDuplicates) tiles.push(tile(n(d.duplicates), 'doublons écartés', `${n(d.unique)} références uniques`));
   if (d.screening) tiles.push(tile(n(d.screening.include + d.screening.maybe), 'retenues au tri', `dont ${n(d.screening.maybe)} incertaines`));
   if (d.fulltext) tiles.push(tile(n(d.fulltext.include), 'incluses dans la revue', `${n(d.fulltext.done)} textes intégraux évalués`));
-  if (d.time) {
-    // Arrondi à la minute avant d'additionner : le total correspond au détail affiché.
-    const minute = (ms: number) => Math.round(ms / 60_000) * 60_000;
-    const tri = minute(d.time.screeningMs);
-    const org = minute(d.time.organisationMs);
-    const parts = [tri && `tri ${formatDuration(tri)}`, org && `organisation ${formatDuration(org)}`].filter(Boolean);
-    tiles.push(tile(formatDuration(tri + org), `de travail · ${n(d.time.sessions)} séance${d.time.sessions > 1 ? 's' : ''}`, `${parts.join(' · ')}${d.time.estimatedMs ? ' (en partie estimé)' : ''}`));
-  }
   if (d.plan) tiles.push(tile(`${pct(d.plan.classified, d.plan.pool)} %`, 'classées dans le plan', `${n(d.plan.classified)} sur ${n(d.plan.pool)} ${d.plan.poolLabel}`));
 
   const decisions = d.screening
@@ -201,6 +198,20 @@ export function reportHtml(d: ReportData, t: ReportTheme, fontCss = '', logoUrl 
           .map(([l, v, c]) => `<div class="dec"><span>${l}</span><div class="bar" style="width:${((v / max) * 100).toFixed(1)}%;background:${c}"></div><span class="num"><b>${n(v)}</b> · ${pct(v, tot)} %</span></div>`)
           .join('')}<div class="note">Sur ${n(tot)} références triées.${
           d.screening.aside ? ` À noter : ${esc(d.screening.aside)} ; ils ne sont pas comptés ici.` : ''
+        }</div></div>`;
+      })()
+    : '';
+
+  const time = d.time
+    ? (() => {
+        const max = Math.max(...d.time.stages.map((x) => x.ms));
+        return `<div class="card" style="margin-top:10px"><h2>Temps de travail dans Biblikube</h2>${d.time.stages
+          .map(
+            (x) =>
+              `<div class="dec tm"><span>${x.label}</span><div class="bar" style="width:${((x.ms / max) * 100).toFixed(1)}%;background:${t.accent}"></div><span class="num"><b>${formatDuration(x.ms)}</b> · ${n(x.sessions)} séance${x.sessions > 1 ? 's' : ''}</span></div>`,
+          )
+          .join('')}<div class="note">Temps actif mesuré seulement sur le tri titre-résumé et l’organisation ; les autres étapes (recherche, doublons, texte intégral) ne sont pas chronométrées.${
+          d.time.estimated ? ' Une partie du temps de tri est estimée d’après l’heure des décisions.' : ''
         }</div></div>`;
       })()
     : '';
@@ -238,7 +249,7 @@ ${d.plan.keyArticles.length ? `<div class="card"><h2>Articles clés (marqués «
   const comment = d.comment ? `<div class="card comment"><h2>Commentaire</h2><p>${esc(d.comment).replace(/\n/g, '<br>')}</p></div>` : '';
 
   const progress = `<div class="tiles" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.join('')}</div>
-<div class="${decisions ? 'grid2' : ''}">${steps}${decisions}</div>${flow}`;
+<div class="${decisions ? 'grid2' : ''}">${steps}${decisions}</div>${flow}${time}`;
   const orgSection = d.plan ? `<h1 class="sec">Organisation · ${esc(d.plan.name)}</h1>${plan}` : '';
   const tail = `<div class="grid2">${reasons}${sources}</div>`;
   const body = d.organiseFirst ? `${progress}${orgSection}${tail}${comment}` : `${progress}${tail}${orgSection}${comment}`;
@@ -272,6 +283,7 @@ h2{font-family:'Outfit Variable',Outfit,'Inter Variable',Inter,sans-serif;font-s
 .track{height:10px;border-radius:999px;background:${t.soft};overflow:hidden}.fill{height:100%;border-radius:999px;background:${t.accent}}
 .pct{text-align:right;white-space:nowrap;min-width:36px;color:${t.muted}}
 .dec{display:grid;grid-template-columns:90px 1fr 74px;align-items:center;gap:8px;margin:7px 0;font-size:8.8pt}
+.dec.tm{grid-template-columns:110px 1fr 120px}
 .bar{height:13px;border-radius:0 4px 4px 0}
 .num{font-variant-numeric:tabular-nums;text-align:right}
 .note{font-size:7.8pt;color:${t.muted};margin-top:6px}
@@ -289,8 +301,8 @@ td{padding:5px 4px;border-bottom:1px solid ${t.soft};vertical-align:top}.n{text-
 .comment p{margin:0;font-size:9.6pt}
 .foot{margin-top:14px;display:flex;font-size:7.6pt;color:${t.muted};border-top:1px solid ${t.soft};padding-top:6px}
 </style></head><body><div class="bg"></div><div class="wrap">
-<div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">Biblikube</span><span class="sp"></span><span class="pill">Point d’étape · ${d.date}</span></div>
-<div class="eyebrow">${d.modeLabel} · point d’étape</div>
+<div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">Biblikube</span><span class="sp"></span><span class="pill">${d.date}</span></div>
+<div class="eyebrow">${d.modeLabel}</div>
 <h1>${esc(d.name)}</h1>
 ${d.question ? `<div class="q"><b>Question de recherche</b>${esc(d.question)}</div>` : ''}
 ${body}

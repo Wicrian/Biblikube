@@ -334,11 +334,13 @@ function SwipeCard({ onSwipe, children }: { onSwipe: (d: Decision) => void; chil
     setTimeout(() => onSwipe(dec), 200);
   };
 
+  // La carte part depuis l'endroit où on l'a lâchée et continue dans la même direction
+  // (sans repasser par le milieu, ce qui donnait l'impression d'un refus).
+  const flyX = flying === 'include' ? Math.max(d.x, 0) + 700 : flying === 'exclude' ? Math.min(d.x, 0) - 700 : d.x;
+  const flyY = flying === 'maybe' ? Math.min(d.y, 0) - 600 : d.y;
   const transform = flying
-    ? flying === 'maybe'
-      ? 'translate(0, -120%)'
-      : `translate(${flying === 'include' ? 140 : -140}%, 0) rotate(${flying === 'include' ? 20 : -20}deg)`
-    : `translate(${d.x}px, ${Math.min(d.y, 0)}px) rotate(${d.x / 25}deg)`;
+    ? `translate(${flyX}px, ${flyY}px) rotate(${flyX / 25}deg) scale(0.85)`
+    : `translate(${d.x}px, ${d.y}px) rotate(${d.x / 25}deg)`;
   const op = (v: number) => Math.min(Math.max(v / THRESHOLD, 0), 1);
 
   return (
