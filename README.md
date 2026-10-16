@@ -10,7 +10,7 @@ Vos références ne sont jamais réimportées ni converties : Biblikube les lit 
 écrit, au fur et à mesure, le résultat de chaque étape (collections, étiquettes, notes). Les titres, résumés et
 accents restent exactement comme dans Zotero.
 
-> 🧪 Version 0.2 : fonctionnelle mais jeune. Faites des sauvegardes (export JSON) et signalez les problèmes dans
+> 🧪 Version 0.2.1 : fonctionnelle mais jeune. Faites des sauvegardes (export JSON) et signalez les problèmes dans
 > les *issues* GitHub.
 
 ---
@@ -175,6 +175,11 @@ prévu dans la feuille de route.
 
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
+
+**0.2.1 — octobre 2026**
+- Le bouton « Synchroniser » montre ce qu’il fait (« Synchronisation… », puis « À jour · heure »).
+- Identification : la liste des collections Zotero se recharge d’un clic, et une aide s’affiche quand aucune collection
+  n’est trouvée sur zotero.org (Zotero de l’ordinateur pas encore synchronisé).
 
 **0.2 — octobre 2026**
 - LitFlow devient **Biblikube**, avec son logo (le cube, par Maude Leblanc-Côté). Les revues déjà commencées
