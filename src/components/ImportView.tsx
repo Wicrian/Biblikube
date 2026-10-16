@@ -163,18 +163,26 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
                 </span>
                 {collectionsAt && !reloading && tree.length === 0 && (
                   <div className="notice warn small" style={{ marginTop: '0.5rem' }}>
-                    <strong>Aucune collection trouvée sur zotero.org.</strong> Biblikube lit la copie en ligne de votre bibliothèque,
-                    pas le Zotero de votre ordinateur. Si vous voyez des dossiers dans Zotero :
+                    <strong>Aucune collection trouvée sur zotero.org.</strong> Le plus souvent, c’est que{' '}
+                    <strong>votre Zotero d’ordinateur n’est pas synchronisé avec zotero.org</strong> : Biblikube lit seulement la copie
+                    en ligne de votre bibliothèque.
                     <ol style={{ margin: '0.4rem 0 0', paddingLeft: '1.2rem' }}>
                       <li>
-                        dans Zotero, ouvrez les <strong>Paramètres → Synchronisation</strong> (Settings → Sync) et connectez-vous avec le
-                        même compte que dans Biblikube ({settings.username || 'votre compte'}) ;
+                        Vérifiez sur{' '}
+                        <a href="https://www.zotero.org/mylibrary" target="_blank" rel="noreferrer">
+                          zotero.org (votre bibliothèque en ligne)
+                        </a>{' '}
+                        si vos dossiers y apparaissent.
                       </li>
                       <li>
-                        cliquez sur le bouton de synchronisation de Zotero (deux flèches en cercle, en haut à droite) et attendez la fin ;
+                        S’ils n’y sont pas : dans Zotero sur votre ordinateur, ouvrez <strong>Paramètres → Synchronisation</strong>{' '}
+                        (Settings → Sync) et connectez-vous avec le compte <strong>{settings.username || 'utilisé dans Biblikube'}</strong>.
                       </li>
                       <li>
-                        revenez ici et cliquez sur <strong>↻ Recharger la liste</strong>.
+                        Cliquez sur le bouton de synchronisation de Zotero (deux flèches en cercle, en haut à droite) et attendez la fin.
+                      </li>
+                      <li>
+                        Revenez ici et cliquez sur <strong>↻ Recharger la liste</strong>.
                       </li>
                     </ol>
                   </div>
