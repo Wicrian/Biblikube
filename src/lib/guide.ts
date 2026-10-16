@@ -45,8 +45,13 @@ export function guideSteps(p: Project, openDuplicates: number): GuideStep[] {
   const visited = p.guide?.visited ?? [];
   const steps: GuideStep[] = [];
   const add = (s: GuideStep) => steps.push(s);
-  if (mode === 'systematic')
-    add({ id: 'question', label: 'Écrire votre question de recherche', hint: 'Dans le protocole : la question et vos critères.', view: 'protocol', done: !!p.question.trim() });
+  add({
+    id: 'question',
+    label: 'Écrire votre question de recherche',
+    hint: mode === 'systematic' ? 'Dans le protocole : la question et vos critères.' : 'En haut de l’écran, sous le nom de la revue (✎). Elle peut changer en cours de route.',
+    view: mode === 'systematic' ? 'protocol' : 'import',
+    done: !!p.question.trim(),
+  });
   add({ id: 'zotero', label: 'Relier votre collection Zotero', hint: 'Vos articles sont lus directement dans Zotero.', view: 'import', done: records > 0 });
   add({ id: 'dedup', label: 'Vérifier les doublons', hint: 'Le même article trouvé deux fois ?', view: 'dedup', done: records > 0 && openDuplicates === 0 });
   if (mode !== 'organise')

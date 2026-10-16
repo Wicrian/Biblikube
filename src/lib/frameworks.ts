@@ -115,7 +115,7 @@ export const REVIEW_TYPES: Record<ReviewType, string> = {
   integrative: 'Revue intégrative',
   'meta-analysis': 'Méta-analyse',
   narrative: 'Revue narrative',
-  other: 'Autre',
+  other: 'Sans type précis (ou je ne sais pas encore)',
 };
 
 export const DEFAULT_REASONS: Project['reasons'] = {
@@ -154,7 +154,7 @@ export function newProject(name: string): Project {
     name,
     createdAt: now,
     updatedAt: now,
-    reviewType: 'systematic',
+    reviewType: 'other',
     question: '',
     framework: { id: 'PICO', elements: frameworkElements('PICO') },
     inclusionCriteria: [],

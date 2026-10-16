@@ -7,11 +7,13 @@ import { categoryLabel, orderedCategories } from './organisation';
 import { fulltextKeys, screeningKeys, setAsideDecisions, setAsideNote } from './prisma';
 import { formatDuration, sessionRows, summarize } from './timeLog';
 import { authorsShort } from './text';
+import { REVIEW_TYPES } from './frameworks';
 
 export interface ReportData {
   name: string;
   date: string;
   modeLabel: string;
+  reviewType: string;
   question: string;
   comment: string;
   identified: number;
@@ -126,6 +128,7 @@ export function reportData(p: Project, today = new Date()): ReportData {
     date: today.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' }),
     modeLabel: p.mode === 'organise' ? 'Organisation des lectures' : p.mode === 'sort' ? 'Tri et organisation' : 'Revue systématique',
     question: p.question.trim(),
+    reviewType: p.reviewType && p.reviewType !== 'other' ? REVIEW_TYPES[p.reviewType] : '',
     comment: (p.reportComment ?? '').trim(),
     identified: records.length,
     duplicates,
@@ -300,7 +303,7 @@ td{padding:5px 4px;border-bottom:1px solid ${t.soft};vertical-align:top}.n{text-
 .foot{margin-top:14px;display:flex;font-size:7.6pt;color:${t.muted};border-top:1px solid ${t.soft};padding-top:6px}
 </style></head><body><div class="bg"></div><div class="wrap">
 <div class="top">${logoUrl ? `<img class="logo" src="${esc(logoUrl)}" alt="">` : '<span class="logo">✦</span>'}<span class="brand">Biblikube</span><span class="sp"></span><span class="pill">${d.date}</span></div>
-<div class="eyebrow">${d.modeLabel}</div>
+<div class="eyebrow">${d.modeLabel}${d.reviewType && d.reviewType !== d.modeLabel ? ` · ${esc(d.reviewType)}` : ''}</div>
 <h1>${esc(d.name)}</h1>
 ${d.question ? `<div class="q"><b>Question de recherche</b>${esc(d.question)}</div>` : ''}
 ${body}

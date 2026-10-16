@@ -4,13 +4,14 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import type { ReviewMode } from '../types';
+import type { ReviewMode, ReviewType } from '../types';
+import { REVIEW_TYPES } from '../lib/frameworks';
 import { MODES } from '../lib/guide';
 import { useProject } from '../store';
 import { ImportView } from './ImportView';
 import { Portal } from './Portal';
 
-type Step = 'mode' | 'zotero' | 'preview';
+type Step = 'mode' | 'sujet' | 'zotero' | 'preview';
 
 export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; onFinish: (fullInterface: boolean) => void }) {
   const { project: p, update, settings } = useProject();
@@ -19,8 +20,8 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
   const records = Object.keys(p.records).length;
 
   const choose = (m: ReviewMode) => {
-    update((cur) => ({ ...cur, mode: m, reviewType: m === 'systematic' ? cur.reviewType : 'narrative' }));
-    setStep('zotero');
+    update((cur) => ({ ...cur, mode: m }));
+    setStep('sujet');
   };
 
   return (
@@ -28,7 +29,7 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
       <div className="onb-card stack">
         <div className="row">
           <div className="onb-dots">
-            {(['mode', 'zotero', 'preview'] as Step[]).map((s) => (
+            {(['mode', 'sujet', 'zotero', 'preview'] as Step[]).map((s) => (
               <span key={s} className={s === step ? 'on' : ''} />
             ))}
           </div>
@@ -64,6 +65,43 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
           </>
         )}
 
+        {step === 'sujet' && (
+          <>
+            <h1 className="onb-title">Votre sujet, en une phrase</h1>
+            <p className="muted">Facultatif : vous pourrez l’écrire ou la changer plus tard. Elle s’affichera en haut de l’écran et dans l’état d’avancement.</p>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <strong>Ma question de recherche</strong>
+              <textarea
+                rows={3}
+                value={p.question}
+                placeholder="Ex. : Quelles pratiques favorisent le rétablissement en santé mentale chez les jeunes adultes ?"
+                onChange={(e) => update((cur) => ({ ...cur, question: e.target.value }))}
+              />
+              <span className="small muted">Pas encore de question précise ? Écrivez votre sujet en quelques mots, ou laissez vide.</span>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <strong>Type de travail</strong>
+              <select value={p.reviewType} onChange={(e) => update((cur) => ({ ...cur, reviewType: e.target.value as ReviewType }))}>
+                {(['other', ...Object.keys(REVIEW_TYPES).filter((k) => k !== 'other')] as ReviewType[]).map((k) => (
+                  <option key={k} value={k}>
+                    {REVIEW_TYPES[k]}
+                  </option>
+                ))}
+              </select>
+              <span className="small muted">Si vous hésitez, gardez « Sans type précis » : cela ne change rien au fonctionnement.</span>
+            </label>
+            <div className="row">
+              <button className="btn small" onClick={() => setStep('mode')}>
+                ← Retour
+              </button>
+              <span className="spacer" />
+              <button className={`btn ${p.question.trim() ? 'dark' : 'small'}`} onClick={() => setStep('zotero')}>
+                {p.question.trim() ? 'Continuer →' : 'Plus tard →'}
+              </button>
+            </div>
+          </>
+        )}
+
         {step === 'zotero' && (
           <>
             <h1 className="onb-title">Où sont vos articles ?</h1>
@@ -81,7 +119,7 @@ export function Onboarding({ onSettings, onFinish }: { onSettings: () => void; o
               <ImportView compact onSettings={onSettings} onDone={() => setStep('preview')} />
             )}
             <div className="row">
-              <button className="btn small" onClick={() => setStep('mode')}>
+              <button className="btn small" onClick={() => setStep('sujet')}>
                 ← Retour
               </button>
               <span className="spacer" />

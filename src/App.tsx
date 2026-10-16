@@ -21,6 +21,7 @@ import { firstView, visibleViews, type ViewId } from './lib/guide';
 import { Onboarding } from './components/Onboarding';
 import { Guide } from './components/Guide';
 import { SessionsDialog, TimePill, useTimeTracker } from './components/TimeTracker';
+import { QuestionLine } from './components/QuestionLine';
 
 type View = ViewId;
 
@@ -271,6 +272,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
       <header className="page-head">
         <div className="page-title">
           <div className="eyebrow">{project.name}</div>
+          <QuestionLine />
           <h1>{v.title}</h1>
           <p className="muted hide-mobile">{v.subtitle}</p>
         </div>

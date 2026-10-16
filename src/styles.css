@@ -744,3 +744,10 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
 .sessions-stages { display: grid; gap: 0.35rem; }
 .sessions-stage { display: grid; grid-template-columns: 11rem 5rem 1fr; gap: 0.6rem; align-items: baseline; padding: 0.45rem 0.8rem; border-radius: var(--radius); background: var(--panel-strong); }
 @media (max-width: 700px) { .sessions-stage { grid-template-columns: 1fr auto; } .sessions-stage > :last-child { grid-column: 1 / -1; } }
+
+/* Question de recherche sous le nom de la revue */
+.question-line { display: inline-flex; align-items: center; gap: 0.35rem; max-width: 100%; margin: 0 0 0.25rem; padding: 0.1rem 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 0.88rem; text-align: left; cursor: pointer; }
+.question-line > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.question-line:hover > span:nth-child(2) { text-decoration: underline; }
+.question-line.editing { display: flex; }
+.question-line.editing input { width: min(48rem, 70vw); padding: 0.35rem 0.6rem; font-size: 0.88rem; }
