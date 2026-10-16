@@ -159,6 +159,22 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
   // Chronométrés : le tri titre-résumé (tant qu'il reste des articles à trier) et l'organisation.
   const measured = view === 'organisation' || (view === 'screening' && screeningKeys(project).some((k) => !project.screening[k]));
   const timeLog = useTimeTracker(view, measured);
+  // Retour visuel du bouton « Synchroniser » : il tourne, puis dit ce qu'il a fait.
+  const [manualSync, setManualSync] = useState<{ state: 'running' } | { state: 'done'; at: string } | null>(null);
+  const runManualSync = async () => {
+    if (manualSync?.state === 'running') return;
+    setManualSync({ state: 'running' });
+    const started = Date.now();
+    await syncNow();
+    await pullNow();
+    // Relit aussi la liste des collections Zotero (écran Identification).
+    window.dispatchEvent(new Event('biblikube:reload-collections'));
+    // Au moins 0,8 s de rotation : sinon on ne voit pas que le clic a été pris en compte.
+    await new Promise((r) => setTimeout(r, Math.max(0, 800 - (Date.now() - started))));
+    const d = new Date();
+    setManualSync({ state: 'done', at: `${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}` });
+    setTimeout(() => setManualSync((cur) => (cur?.state === 'done' ? null : cur)), 5000);
+  };
   const [showSessions, setShowSessions] = useState(false);
   const setView = (v: View) => {
     setViewState(v);
@@ -267,12 +283,13 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
           <button
             className="btn dark"
             title="Envoyer les décisions vers Zotero et lire les changements faits dans Zotero"
-            onClick={async () => {
-              await syncNow();
-              await pullNow();
-            }}
+            onClick={runManualSync}
+            disabled={manualSync?.state === 'running'}
           >
-            <RefreshCw size={16} className={syncStatus.state === 'syncing' ? 'spin' : ''} /> <span className="hide-mobile">Synchroniser</span>
+            <RefreshCw size={16} className={syncStatus.state === 'syncing' || manualSync?.state === 'running' ? 'spin' : ''} />{' '}
+            <span className="hide-mobile">
+              {manualSync?.state === 'running' ? 'Synchronisation…' : manualSync?.state === 'done' ? `À jour · ${manualSync.at}` : 'Synchroniser'}
+            </span>
           </button>
         )}
       </header>

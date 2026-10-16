@@ -17,6 +17,9 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
   const { project: p, update, settings, client, markDirty, syncNow } = useProject();
   const [libraries, setLibraries] = useState<ZoteroLibrary[]>([]);
   const [collections, setCollections] = useState<ZCollection[]>([]);
+  // null : pas encore chargées ; sinon heure du dernier chargement.
+  const [collectionsAt, setCollectionsAt] = useState<string | null>(null);
+  const [reloading, setReloading] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [result, setResult] = useState('');
@@ -37,12 +40,26 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.apiKey, settings.userId]);
 
-  useEffect(() => {
+  const loadCollections = () => {
     if (!client) return;
+    setReloading(true);
     client
       .collections()
-      .then(setCollections)
-      .catch((e) => setError(String(e.message ?? e)));
+      .then((c) => {
+        setCollections(c);
+        const d = new Date();
+        setCollectionsAt(`${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}`);
+      })
+      .catch((e) => setError(String(e.message ?? e)))
+      .finally(() => setReloading(false));
+  };
+  useEffect(() => {
+    setCollectionsAt(null);
+    loadCollections();
+    // Le bouton « Synchroniser » de l'en-tête demande aussi de relire la liste.
+    window.addEventListener('biblikube:reload-collections', loadCollections);
+    return () => window.removeEventListener('biblikube:reload-collections', loadCollections);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
   const run = async (label: string, fn: () => Promise<void>) => {
@@ -138,6 +155,30 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
                     </option>
                   ))}
                 </select>
+                <span className="row small muted" style={{ gap: '0.5rem', marginTop: '0.35rem' }}>
+                  {reloading ? 'Lecture des collections sur zotero.org…' : collectionsAt ? `${tree.length} collection(s) trouvée(s) sur zotero.org · ${collectionsAt}` : ''}
+                  <button type="button" className="btn small" onClick={loadCollections} disabled={reloading}>
+                    ↻ Recharger la liste
+                  </button>
+                </span>
+                {collectionsAt && !reloading && tree.length === 0 && (
+                  <div className="notice warn small" style={{ marginTop: '0.5rem' }}>
+                    <strong>Aucune collection trouvée sur zotero.org.</strong> Biblikube lit la copie en ligne de votre bibliothèque,
+                    pas le Zotero de votre ordinateur. Si vous voyez des dossiers dans Zotero :
+                    <ol style={{ margin: '0.4rem 0 0', paddingLeft: '1.2rem' }}>
+                      <li>
+                        dans Zotero, ouvrez les <strong>Paramètres → Synchronisation</strong> (Settings → Sync) et connectez-vous avec le
+                        même compte que dans Biblikube ({settings.username || 'votre compte'}) ;
+                      </li>
+                      <li>
+                        cliquez sur le bouton de synchronisation de Zotero (deux flèches en cercle, en haut à droite) et attendez la fin ;
+                      </li>
+                      <li>
+                        revenez ici et cliquez sur <strong>↻ Recharger la liste</strong>.
+                      </li>
+                    </ol>
+                  </div>
+                )}
               </label>
             )}
             {compact && p.mode !== 'systematic' ? (
