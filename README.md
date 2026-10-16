@@ -180,6 +180,14 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.3 — octobre 2026**
+- Question de recherche : un nouvel écran facultatif au démarrage (« Votre sujet, en une phrase »), puis affichée sous
+  le nom de la revue sur tous les écrans, modifiable d’un clic (✎). Le guide propose de l’écrire, quel que soit le niveau.
+- Type de travail au choix (revue de portée, intégrative…) ; par défaut « Sans type précis (ou je ne sais pas encore) ».
+  Il apparaît dans l’état d’avancement (PDF).
+- Comptage anonyme des visites (GoatCounter, sans cookie) : nombre, pays et type d’appareil seulement, pour savoir si
+  Biblikube est utilisé et sur quels appareils le vérifier. Voir « Confidentialité ».
+
 **0.2.2 — octobre 2026**
 - Message plus clair quand aucune collection n’est trouvée : il indique que le Zotero de l’ordinateur n’est sans doute
   pas synchronisé avec zotero.org, avec un lien vers la bibliothèque en ligne.
