@@ -5,7 +5,7 @@ import { applyTheme, loadTheme, THEMES, type ThemeId } from '../lib/theme';
 export function ThemePicker({ onClose }: { onClose: () => void }) {
   const [current, setCurrent] = useState<ThemeId>(loadTheme);
   return (
-    <div className="overlay" onClick={onClose}>
+    <div className="overlay above-guide" onClick={onClose}>
       <div className="modal stack" onClick={(e) => e.stopPropagation()}>
         <h2>Ambiance de couleurs</h2>
         <p className="small muted">Le style change seulement l’apparence : vos revues et vos décisions ne sont pas touchées.</p>

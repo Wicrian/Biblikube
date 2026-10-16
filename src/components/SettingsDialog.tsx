@@ -25,7 +25,7 @@ export function SettingsDialog({ settings, onSave, onClose }: { settings: Settin
   };
 
   return (
-    <div className="overlay" onClick={onClose}>
+    <div className="overlay above-guide" onClick={onClose}>
       <div className="modal stack" onClick={(e) => e.stopPropagation()}>
         <h2>Connexion à Zotero</h2>
         <ol className="small">
