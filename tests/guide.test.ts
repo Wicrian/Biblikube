@@ -17,6 +17,7 @@ describe('parcours et guide', () => {
     const p = { ...demoProject(), mode: 'sort' as const, guide: newGuide() };
     const ids = guideSteps(p, 2).map((s) => [s.id, s.done]);
     expect(ids).toEqual([
+      ['question', true],
       ['zotero', true],
       ['dedup', false],
       ['screen', false],
