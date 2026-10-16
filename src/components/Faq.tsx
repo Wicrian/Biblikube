@@ -26,7 +26,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
         Seulement vous, et les personnes qui ont déjà accès à votre bibliothèque Zotero. Biblikube n’a ni serveur ni compte :
         vos données restent dans ce navigateur et dans votre Zotero. Si vous travaillez dans une bibliothèque de groupe, les
         membres du groupe voient les collections, étiquettes et notes créées par Biblikube, comme n’importe quel autre
-        contenu du groupe.
+        contenu du groupe. Seul le nombre de visites est compté, de façon anonyme, avec le pays et le type d’appareil (ordinateur, tablette,
+        téléphone) : aucune donnée personnelle, aucun cookie, et rien de vos revues. Cela permet de savoir si Biblikube est
+        utilisé, donc s’il vaut la peine de continuer à le mettre à jour, et de vérifier qu’il fonctionne bien sur les
+        appareils les plus courants.
       </p>
     ),
   },
