@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { demoProject } from '../src/lib/demo';
 import { firstView, guideSteps, newGuide, visibleViews, type ViewId } from '../src/lib/guide';
 
-const ALL: ViewId[] = ['protocol', 'search', 'import', 'dedup', 'screening', 'fulltext', 'organisation', 'records', 'prisma'];
+const ALL: ViewId[] = ['protocol', 'search', 'import', 'dedup', 'screening', 'fulltext', 'organisation', 'fiches', 'records', 'prisma'];
 
 describe('parcours et guide', () => {
   it('sans niveau choisi, toute l’interface est visible (revues existantes)', () => {
@@ -10,7 +10,7 @@ describe('parcours et guide', () => {
   });
   it('« Organiser » ne montre que les étapes utiles, « + étapes » montre tout', () => {
     const p = { ...demoProject(), mode: 'organise' as const, guide: newGuide() };
-    expect(visibleViews(p, ALL)).toEqual(['import', 'dedup', 'organisation', 'records']);
+    expect(visibleViews(p, ALL)).toEqual(['import', 'dedup', 'organisation', 'fiches', 'records']);
     expect(visibleViews({ ...p, guide: { ...p.guide, showAll: true } }, ALL)).toEqual(ALL);
   });
   it('les étapes du guide se cochent selon le travail fait', () => {

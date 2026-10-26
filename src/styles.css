@@ -751,3 +751,27 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
 .question-line:hover > span:nth-child(2) { text-decoration: underline; }
 .question-line.editing { display: flex; }
 .question-line.editing input { width: min(48rem, 70vw); padding: 0.35rem 0.6rem; font-size: 0.88rem; }
+
+/* Fiches Zotero (vérification selon la norme) */
+.fiches-layout { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 1rem; align-items: start; }
+@media (max-width: 860px) { .fiches-layout { grid-template-columns: 1fr; } }
+.fiche-list { display: flex; flex-direction: column; gap: 0.35rem; max-height: 75vh; overflow: auto; }
+.fiche-row { display: grid; gap: 0.15rem; justify-items: start; text-align: left; padding: 0.55rem 0.65rem; border-radius: 12px; border: 2px solid transparent; background: var(--panel-strong); color: var(--text); font: inherit; font-size: 0.86rem; cursor: pointer; }
+.fiche-row.on { border-color: var(--accent); }
+.fiche-row-title { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fiche-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+.src { display: inline-block; font-weight: 600; font-size: 0.78rem; padding: 0.05rem 0.45rem; border-radius: 999px; }
+.src.sure { background: var(--include-soft); color: var(--include); }
+.src.check { background: var(--maybe-soft); color: var(--maybe); }
+.src.none { background: var(--exclude-soft); color: var(--exclude); }
+.fiche-fields .fiche-missing { background: var(--exclude-soft); box-shadow: inset 3px 0 0 var(--exclude); }
+.fiche-issue { display: block; font-size: 0.78rem; margin-top: 0.1rem; }
+.fiche-issue.manque { color: var(--exclude); }
+.fiche-issue.forme { color: var(--maybe); }
+.fiche-issue.conseil { color: var(--muted); }
+.fiche-edit { display: flex; flex-direction: column; gap: 0.25rem; }
+.fiche-edit input { font-size: 0.88rem; }
+.fiche-preview { display: grid; gap: 0.45rem; }
+.fiche-ref { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.6rem; align-items: start; }
+.fiche-ref p { margin: 0; padding-left: 2em; text-indent: -2em; font-family: Georgia, 'Times New Roman', serif; font-size: 0.95rem; line-height: 1.5; }
+.ref-missing { color: var(--exclude); font-family: var(--font-body, inherit); font-size: 0.82rem; font-weight: 600; }
