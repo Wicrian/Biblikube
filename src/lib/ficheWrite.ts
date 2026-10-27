@@ -5,22 +5,30 @@
 // Zotero ne garde pas d'historique, cette note permet de revenir en arrière.
 import type { Creator, RecordItem } from '../types';
 import type { ZItemData } from '../zotero/api';
-import { FIELD_LABELS, fieldValue, type FieldId } from './citeCheck';
+import { fieldLabel, fieldValue, type FieldId } from './citeCheck';
 
 /** Champs modifiables depuis Biblikube (le type de document se change dans Zotero). */
-export const EDITABLE: FieldId[] = ['creators', 'editors', 'date', 'title', 'publication', 'volume', 'issue', 'pages', 'doi', 'url', 'publisher', 'bookTitle', 'accessDate'];
+export const EDITABLE: FieldId[] = ['creators', 'editors', 'date', 'title', 'publication', 'volume', 'issue', 'pages', 'doi', 'url', 'publisher', 'bookTitle', 'accessDate', 'number', 'authority'];
 
 /** Nom du champ Zotero selon le type de document (null : ce type n'a pas ce champ). */
 export function zoteroField(itemType: string, f: FieldId): string | null {
   switch (f) {
     case 'title':
+      return { statute: 'nameOfAct', case: 'caseName', email: 'subject' }[itemType] ?? 'title';
     case 'date':
+      return { statute: 'dateEnacted', case: 'dateDecided', patent: 'issueDate' }[itemType] ?? 'date';
     case 'url':
     case 'accessDate':
       return f;
+    case 'number':
+      return { bill: 'billNumber', statute: 'publicLawNumber', case: 'docketNumber', report: 'reportNumber', patent: 'patentNumber' }[itemType] ?? null;
+    case 'authority':
+      return { bill: 'legislativeBody', hearing: 'legislativeBody', case: 'court', patent: 'issuingAuthority' }[itemType] ?? null;
     case 'publication':
       if (itemType === 'webpage') return 'websiteTitle';
       if (itemType === 'blogPost') return 'blogTitle';
+      if (itemType === 'bill' || itemType === 'statute') return 'code';
+      if (itemType === 'case') return 'reporter';
       return ['journalArticle', 'newspaperArticle', 'magazineArticle'].includes(itemType) ? 'publicationTitle' : null;
     case 'volume':
       return ['journalArticle', 'magazineArticle', 'book', 'bookSection'].includes(itemType) ? 'volume' : null;
@@ -101,6 +109,6 @@ const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 /** Note Zotero qui garde les anciennes valeurs. */
 export function oldValuesNote(r: RecordItem, changed: FieldId[], when = new Date()): string {
   const date = when.toLocaleString('fr-CA', { dateStyle: 'long', timeStyle: 'short' });
-  const rows = changed.map((f) => `<li><strong>${escHtml(FIELD_LABELS[f])}</strong> : ${escHtml(editValue(r, f)) || '<em>(vide)</em>'}</li>`).join('');
+  const rows = changed.map((f) => `<li><strong>${escHtml(fieldLabel(r.itemType, f))}</strong> : ${escHtml(editValue(r, f)) || '<em>(vide)</em>'}</li>`).join('');
   return `<h2>Biblikube – anciennes valeurs</h2><p>Valeurs avant la correction du ${escHtml(date)} (écran « Fiches » de Biblikube). Pour revenir en arrière, recopiez-les dans la fiche.</p><ul>${rows}</ul>`;
 }

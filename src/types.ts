@@ -50,6 +50,10 @@ export interface RecordItem {
   university?: string;
   /** Le DOI n'est pas dans sa case, mais dans « Extra ». */
   doiInExtra?: boolean;
+  /** Numéro (projet de loi, loi, jugement, rapport…) et organe (assemblée, tribunal). */
+  number?: string;
+  authority?: string;
+  session?: string;
 }
 
 export interface StageDecision {

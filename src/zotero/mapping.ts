@@ -2,6 +2,20 @@ import type { Project, RecordItem } from '../types';
 import { parsePageCount, parseYear } from '../lib/text';
 import type { ZItem } from './api';
 
+// Selon le type de document, Zotero range le titre, la date, etc. dans des
+// champs qui portent un autre nom (ex. « Nom de l'acte » pour un acte juridique).
+const s_ = (d: ZItem['data'], ...keys: string[]) => {
+  for (const k of keys) {
+    const v = d[k];
+    if (typeof v === 'string' && v.trim()) return v;
+  }
+  return '';
+};
+export const itemTitle = (d: ZItem['data']) => s_(d, 'title', 'nameOfAct', 'caseName', 'subject');
+export const itemDate = (d: ZItem['data']) => s_(d, 'date', 'dateEnacted', 'dateDecided', 'issueDate');
+const itemPublication = (d: ZItem['data']) =>
+  s_(d, 'publicationTitle', 'bookTitle', 'proceedingsTitle', 'websiteTitle', 'blogTitle', 'forumTitle', 'encyclopediaTitle', 'dictionaryTitle', 'programTitle', 'code', 'reporter', 'university', 'institution', 'publisher');
+
 /** Convertit un item Zotero en référence Biblikube, sans modifier aucun texte. */
 export function toRecord(item: ZItem, sources: string[]): RecordItem {
   const d = item.data;
@@ -9,19 +23,19 @@ export function toRecord(item: ZItem, sources: string[]): RecordItem {
     key: item.key,
     version: item.version,
     itemType: d.itemType,
-    title: d.title ?? '',
+    title: itemTitle(d),
     creators: (d.creators ?? []).map((c) => ({
       firstName: c.firstName,
       lastName: c.lastName,
       name: c.name,
       creatorType: c.creatorType,
     })),
-    date: d.date ?? '',
-    year: parseYear(d.date ?? ''),
+    date: itemDate(d),
+    year: parseYear(itemDate(d)),
     abstract: d.abstractNote ?? '',
     doi: d.DOI ?? extractDoiFromExtra(d.extra ?? ''),
     url: d.url ?? '',
-    publication: d.publicationTitle || d.bookTitle || d.proceedingsTitle || d.university || d.publisher || '',
+    publication: itemPublication(d),
     language: d.language ?? '',
     pages: d.pages ?? '',
     pageCount: parsePageCount(d.pages ?? '', d.numPages),
@@ -77,8 +91,24 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   blogPost: 'Billet de blog',
   encyclopediaArticle: 'Article d’encyclopédie',
   dictionaryEntry: 'Entrée de dictionnaire',
-  statute: 'Loi',
-  case: 'Jurisprudence',
+  statute: 'Acte juridique',
+  bill: 'Projet de loi',
+  case: 'Affaire (jugement)',
+  hearing: 'Audience',
+  patent: 'Brevet',
+  letter: 'Lettre',
+  email: 'Courriel',
+  interview: 'Entretien',
+  film: 'Film',
+  audioRecording: 'Enregistrement audio',
+  podcast: 'Balado',
+  tvBroadcast: 'Émission de télévision',
+  radioBroadcast: 'Émission de radio',
+  artwork: 'Œuvre d’art',
+  map: 'Carte',
+  computerProgram: 'Logiciel',
+  forumPost: 'Message de forum',
+  instantMessage: 'Message instantané',
   videoRecording: 'Vidéo',
   standard: 'Norme',
 };
@@ -95,5 +125,8 @@ export function toFicheRecord(item: ZItem): RecordItem {
     institution: str(d.institution),
     university: str(d.university),
     doiInExtra: !d.DOI && !!extractDoiFromExtra(d.extra ?? ''),
+    number: str(s_(d, 'billNumber', 'publicLawNumber', 'docketNumber', 'reportNumber', 'patentNumber', 'number')),
+    authority: str(s_(d, 'legislativeBody', 'court', 'issuingAuthority')),
+    session: str(d.session),
   };
 }

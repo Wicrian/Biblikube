@@ -14,7 +14,7 @@ import { itemTypeLabel, toFicheRecord } from '../zotero/mapping';
 import { zoteroSelectLink, type ZItemData } from '../zotero/api';
 import { buildPatch, canEdit, editValue, oldValuesNote, type Edit } from '../lib/ficheWrite';
 import { lookupFiche, lookupWorth, type Lookup } from '../lib/ficheLookup';
-import { CITE_STYLES, EXPECTED, FIELD_LABELS, checkRecord, fieldValue, issueCount, referenceHtml, type CiteStyle, type FieldId, type Issue } from '../lib/citeCheck';
+import { CITE_STYLES, EXPECTED, FIELD_LABELS, checkRecord, fieldLabel, isKnownType, fieldValue, issueCount, referenceHtml, type CiteStyle, type FieldId, type Issue } from '../lib/citeCheck';
 import { SOURCE_INFO, applySuggestions, suggestionsFor, type Suggestion } from '../lib/citeSuggest';
 
 /** Styles Zotero correspondants (répertoire officiel des styles CSL). */
@@ -290,7 +290,7 @@ export function Fiches() {
 }
 
 function CurrentFiche({ r, issues }: { r: RecordItem; issues: Issue[] }) {
-  const fields = [...new Set<FieldId>(['itemType', ...(EXPECTED[r.itemType] ?? ['creators', 'date', 'title']), ...issues.map((i) => i.field)])];
+  const fields = [...new Set<FieldId>(['itemType', ...(EXPECTED[r.itemType] ?? ['title', 'date']), ...issues.map((i) => i.field)])];
   return (
     <div className="dup-item">
       <div className="row small">
@@ -303,7 +303,7 @@ function CurrentFiche({ r, issues }: { r: RecordItem; issues: Issue[] }) {
           const cls = its.some((i) => i.kind === 'manque') ? 'fiche-missing' : its.some((i) => i.kind === 'forme') ? 'dup-diff' : '';
           return (
             <div key={f} className={cls}>
-              <dt>{FIELD_LABELS[f]}</dt>
+              <dt>{fieldLabel(r.itemType, f)}</dt>
               <dd>
                 {v || <span className="muted">— vide</span>}
                 {its.map((i, n) => (
@@ -368,7 +368,7 @@ function FicheLive({
     return [...found, ...ruleSuggestions.filter((s) => !found.some((x) => x.field === s.field))];
   }, [lookup, ruleSuggestions]);
 
-  const fields = [...new Set<FieldId>([...(EXPECTED[r.itemType] ?? ['creators', 'date', 'title']), ...issues.map((i) => i.field)])];
+  const fields = [...new Set<FieldId>([...(EXPECTED[r.itemType] ?? ['title', 'date']), ...issues.map((i) => i.field)])];
   const toFix = fields.filter((f) => issues.some((i) => i.field === f) || suggestions.some((s) => s.field === f));
   const editable = toFix.filter((f) => canEdit(r, f));
   const typeIssue = issues.find((i) => i.field === 'itemType');
@@ -415,11 +415,17 @@ function FicheLive({
       </div>
       {undo && (
         <div className="notice small row" style={{ flexWrap: 'wrap' }}>
-          ✓ Enregistré dans Zotero à {undo.at} ({undo.fields.map((f) => FIELD_LABELS[f]).join(', ')}). Les anciennes valeurs sont dans la note « Biblikube – anciennes valeurs » de la fiche.
+          ✓ Enregistré dans Zotero à {undo.at} ({undo.fields.map((f) => fieldLabel(r.itemType, f)).join(', ')}). Les anciennes valeurs sont dans la note « Biblikube – anciennes valeurs » de la fiche.
           <span className="spacer" />
           <button className="btn small" onClick={() => void onUndo()}>
             <Undo2 size={13} /> Annuler
           </button>
+        </div>
+      )}
+      {!isKnownType(r.itemType) && (
+        <div className="notice small">
+          ℹ️ Biblikube ne connaît pas encore les règles de l’APA pour le type « {itemTypeLabel(r.itemType)} » : il vérifie seulement le titre et la
+          date. Fiez-vous surtout à la référence telle que Zotero l’écrit, plus bas.
         </div>
       )}
       <div className="dup-group">
@@ -450,7 +456,7 @@ function FicheLive({
               return (
                 <label key={f} className="fiche-edit">
                   <span className="row small" style={{ gap: '0.35rem', flexWrap: 'wrap' }}>
-                    <strong>{FIELD_LABELS[f]}</strong>
+                    <strong>{fieldLabel(r.itemType, f)}</strong>
                     {src && !touched.includes(f) && (
                       <span className={`src ${src.kind}`} title={src.label}>
                         {src.icon} {src.label}
@@ -531,7 +537,7 @@ function cleanBib(html: string): string {
 /** Projet de démonstration : propositions simulées et fiche corrigée modifiable. */
 function FicheDemo({ r, issues, style, onDone }: { r: RecordItem; issues: Issue[]; style: CiteStyle; onDone: () => void }) {
   const suggestions = suggestionsFor(r);
-  const fields = [...new Set<FieldId>(['itemType', ...(EXPECTED[r.itemType] ?? ['creators', 'date', 'title']), ...issues.map((i) => i.field)])];
+  const fields = [...new Set<FieldId>(['itemType', ...(EXPECTED[r.itemType] ?? ['title', 'date']), ...issues.map((i) => i.field)])];
   const toFix = fields.filter((f) => issues.some((i) => i.field === f) || suggestions.some((s) => s.field === f));
   const [values, setValues] = useState<Partial<Record<FieldId, { value: string; creators?: Creator[] }>>>(() =>
     Object.fromEntries(suggestions.map((s) => [s.field, { value: s.value, creators: s.creators }])),
@@ -562,7 +568,7 @@ function FicheDemo({ r, issues, style, onDone }: { r: RecordItem; issues: Issue[
               return (
                 <label key={f} className="fiche-edit">
                   <span className="row small" style={{ gap: '0.35rem' }}>
-                    <strong>{FIELD_LABELS[f]}</strong>
+                    <strong>{fieldLabel(r.itemType, f)}</strong>
                     <span className={`src ${src.kind}`} title={src.label}>
                       {src.icon} {src.label}
                     </span>

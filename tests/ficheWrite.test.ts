@@ -36,7 +36,7 @@ describe('corriger une fiche depuis Biblikube', () => {
   it('note des anciennes valeurs', () => {
     const html = oldValuesNote(rec({}), ['publication', 'volume'], new Date(2026, 9, 27, 14, 5));
     expect(html).toContain('Biblikube – anciennes valeurs');
-    expect(html).toContain('<strong>Revue / site</strong> : Int J Nurs Stud');
+    expect(html).toContain('<strong>Revue</strong> : Int J Nurs Stud');
     expect(html).toContain('<strong>Volume</strong> : <em>(vide)</em>');
   });
 });

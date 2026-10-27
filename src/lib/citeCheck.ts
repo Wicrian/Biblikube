@@ -26,7 +26,9 @@ export type FieldId =
   | 'publisher'
   | 'bookTitle'
   | 'editors'
-  | 'accessDate';
+  | 'accessDate'
+  | 'number'
+  | 'authority';
 
 export const FIELD_LABELS: Record<FieldId, string> = {
   itemType: 'Type de document',
@@ -43,7 +45,22 @@ export const FIELD_LABELS: Record<FieldId, string> = {
   bookTitle: 'Titre du livre',
   editors: 'Directeurs (dir.)',
   accessDate: 'Consulté le',
+  number: 'Numéro',
+  authority: 'Assemblée / tribunal',
 };
+
+/** Libellés selon le type de document (proches de ceux de Zotero). */
+const LABELS_BY_TYPE: Record<string, Partial<Record<FieldId, string>>> = {
+  journalArticle: { publication: 'Revue' },
+  webpage: { publication: 'Site web' },
+  blogPost: { publication: 'Blog' },
+  report: { publisher: 'Organisme', number: 'Numéro du rapport' },
+  thesis: { publisher: 'Université' },
+  bill: { number: 'Numéro du projet de loi', authority: 'Assemblée (organe législatif)', publication: 'Code' },
+  statute: { publication: 'Recueil (ex. RLRQ, LC)', number: 'Chapitre (ex. S-4.2)', title: 'Nom de l’acte', date: 'Date de promulgation' },
+  case: { title: 'Nom de l’affaire', date: 'Date de la décision', publication: 'Recueil', number: 'Numéro de dossier', authority: 'Tribunal' },
+};
+export const fieldLabel = (itemType: string, f: FieldId) => LABELS_BY_TYPE[itemType]?.[f] ?? FIELD_LABELS[f];
 
 export interface Issue {
   field: FieldId;
@@ -64,7 +81,17 @@ export const EXPECTED: Record<string, FieldId[]> = {
   newspaperArticle: ['creators', 'date', 'title', 'publication'],
   magazineArticle: ['creators', 'date', 'title', 'publication'],
   document: ['creators', 'date', 'title'],
+  // Documents juridiques : pas d'auteur exigé.
+  bill: ['title', 'number', 'authority', 'date', 'url'],
+  statute: ['title', 'publication', 'number'],
+  case: ['title', 'authority', 'date', 'publication', 'number'],
 };
+
+/** Types dont Biblikube connaît les règles ; pour les autres, seuls le titre et la date sont vérifiés. */
+export const isKnownType = (t: string) => t in EXPECTED;
+
+/** Champs facultatifs selon le type (signalés comme conseil). */
+const OPTIONAL: Record<string, FieldId[]> = { bill: ['url'], case: ['publication', 'number'], thesis: ['url'] };
 
 /** Types à qui l'APA réserve « Récupéré le [date de consultation] » dans le style UQAM. */
 const TYPE_FR: Record<string, string> = {
@@ -113,6 +140,10 @@ export function fieldValue(r: RecordItem, f: FieldId): string {
       return r.publisher ?? '';
     case 'accessDate':
       return formatAccess(r.accessDate);
+    case 'number':
+      return r.number ?? '';
+    case 'authority':
+      return r.authority ?? '';
     case 'bookTitle':
       return r.bookTitle ?? '';
   }
@@ -141,7 +172,7 @@ const MISSING: Partial<Record<FieldId, string>> = {
 
 export function checkRecord(r: RecordItem, style: CiteStyle): Issue[] {
   const out: Issue[] = [];
-  const expected = EXPECTED[r.itemType] ?? ['creators', 'date', 'title'];
+  const expected = EXPECTED[r.itemType] ?? ['date', 'title'];
   for (const f of expected) {
     if (fieldValue(r, f).trim()) continue;
     if (f === 'doi') out.push({ field: f, kind: 'manque', text: 'Pas de DOI. La plupart des articles récents en ont un : à vérifier.' });
@@ -150,7 +181,8 @@ export function checkRecord(r: RecordItem, style: CiteStyle): Issue[] {
       out.push({ field: f, kind: 'conseil', text: 'Pas de date : vérifiez s’il y en a une sur la page. Sinon, « s. d. » (sans date) est correct.' });
     else if (f === 'date') out.push({ field: f, kind: 'manque', text: 'Pas de date : la référence affichera « s. d. » (sans date).' });
     else if (f === 'url' && r.itemType === 'thesis') out.push({ field: f, kind: 'conseil', text: 'Lien vers le dépôt institutionnel conseillé.' });
-    else out.push({ field: f, kind: 'manque', text: MISSING[f] ?? `${FIELD_LABELS[f]} : à remplir.` });
+    else if (OPTIONAL[r.itemType]?.includes(f)) out.push({ field: f, kind: 'conseil', text: `${fieldLabel(r.itemType, f)} : à ajouter si vous l’avez.` });
+    else out.push({ field: f, kind: 'manque', text: MISSING[f] ?? `${fieldLabel(r.itemType, f)} : à remplir.` });
   }
   // Ce qui est présent, mais pas comme la norme le demande.
   if (isAllCaps(r.title)) out.push({ field: 'title', kind: 'forme', text: 'Titre tout en majuscules : à écrire en minuscules (sauf la première lettre et les noms propres).' });
@@ -276,6 +308,16 @@ export function referenceHtml(r: RecordItem, style: CiteStyle): string {
       const link = r.url ? (!r.year && r.accessDate ? ` ${fr ? 'Récupéré le' : 'Retrieved'} ${esc(formatAccess(r.accessDate))} ${fr ? 'de' : 'from'} ${esc(r.url)}` : ` ${esc(r.url)}`) : ` ${missing('URL')}`;
       return `${who} (${year}). <i>${title}</i>. ${site ? `${esc(site)}.` : missing('site')}${link}`;
     }
+    case 'bill':
+    case 'statute': {
+      const code = r.publication ? `. ${esc(r.publication)}` : '';
+      const num = r.number ? ` c. ${esc(r.number)}` : r.itemType === 'bill' ? ` ${missing('numéro')}` : '';
+      const by = r.authority ? ` ${esc(r.authority)}` : r.itemType === 'bill' ? ` ${missing('assemblée')}` : '';
+      const when = r.year ? ` (${r.year})` : '';
+      return `<i>${title}</i>${code},${num}${by}${when}.${r.url ? ` ${esc(r.url)}` : ''}`;
+    }
+    case 'case':
+      return `<i>${title}</i>, ${r.number ? esc(r.number) : ''}${r.authority ? ` (${esc(r.authority)})` : ` ${missing('tribunal')}`} (${year}).${r.url ? ` ${esc(r.url)}` : ''}`;
     default:
       return `${who} (${year}). <i>${title}</i>. ${r.publisher ? `${esc(r.publisher)}.` : ''}${doi}`;
   }
