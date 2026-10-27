@@ -180,6 +180,13 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.4 — octobre 2026**
+- Nouvel écran **Fiches** (sous Organisation, en essai) : vérifie que les fiches Zotero des références classées sont
+  complètes selon l’APA 7, adaptation UQAM (initiales ou prénoms) ou APA 7 en anglais. Il signale les champs manquants,
+  les mauvais types de document (« Document » trop général, mémoire enregistré comme rapport…) et la date de
+  consultation (« Récupéré le… » ne s’affiche que pour une page web sans date). Il montre la référence telle que Zotero
+  l’écrit. Rien n’est modifié dans Zotero : la correction se fait dans Zotero, puis « Revérifier ».
+
 **0.3 — octobre 2026**
 - Question de recherche : un nouvel écran facultatif au démarrage (« Votre sujet, en une phrase »), puis affichée sous
   le nom de la revue sur tous les écrans, modifiable d’un clic (✎). Le guide propose de l’écrire, quel que soit le niveau.
