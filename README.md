@@ -162,6 +162,8 @@ une modification du protocole faite sur l’un n’apparaît sur l’autre qu’
   pour changer d’ordinateur ou partager.
 - La clé API Zotero est stockée dans le navigateur et n’est envoyée qu’à `api.zotero.org`.
 - L’assistant IA télécharge son programme (jsDelivr) et son modèle (Hugging Face) ; aucun texte n’est envoyé.
+- Écran **Fiches** : pour proposer des corrections, seul le DOI ou le titre de la référence est envoyé à Crossref
+  (`api.crossref.org`, base publique des éditeurs). Les PDF sont lus dans le navigateur, sans être envoyés ailleurs.
 - Les visites sont comptées de façon anonyme avec [GoatCounter](https://www.goatcounter.com) (logiciel libre, sans cookie) :
   un signal par navigateur et par jour, dont on garde seulement le pays et le type d’appareil. Aucune donnée
   personnelle ni rien des revues. Pas de comptage si le navigateur demande à ne pas être suivi, ni sur la version test.

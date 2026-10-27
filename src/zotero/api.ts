@@ -193,6 +193,18 @@ export class ZoteroClient {
     return this.json<(ZItem & { bib?: string })[]>(`${this.prefix}/items?${q}`);
   }
 
+  /** Contenu d'un fichier rangé dans Zotero (PDF…), ou null s'il n'est pas sur zotero.org. */
+  async fileData(attachmentKey: string): Promise<ArrayBuffer | null> {
+    try {
+      const url = (await (await this.request(`${this.prefix}/items/${attachmentKey}/file/view/url`)).text()).trim();
+      if (!/^https:\/\//.test(url)) return null;
+      const res = await fetch(url);
+      return res.ok ? await res.arrayBuffer() : null;
+    } catch {
+      return null;
+    }
+  }
+
   children(itemKey: string): Promise<ZItem[]> {
     return this.all<ZItem>(`${this.prefix}/items/${itemKey}/children?format=json`);
   }

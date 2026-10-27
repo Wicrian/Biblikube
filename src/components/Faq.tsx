@@ -29,7 +29,8 @@ const FAQ: { q: string; a: ReactNode }[] = [
         contenu du groupe. Seul le nombre de visites est compté, de façon anonyme, avec le pays et le type d’appareil (ordinateur, tablette,
         téléphone) : aucune donnée personnelle, aucun cookie, et rien de vos revues. Cela permet de savoir si Biblikube est
         utilisé, donc s’il vaut la peine de continuer à le mettre à jour, et de vérifier qu’il fonctionne bien sur les
-        appareils les plus courants.
+        appareils les plus courants. Dans l’écran « Fiches », pour proposer des corrections, seul le DOI ou le titre de la
+        référence est envoyé à Crossref (la base publique des éditeurs) ; vos PDF sont lus dans votre navigateur.
       </p>
     ),
   },

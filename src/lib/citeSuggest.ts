@@ -5,11 +5,13 @@
 // ou du titre) et la première page du PDF rangé dans Zotero.
 import type { Creator, RecordItem } from '../types';
 import type { FieldId } from './citeCheck';
+import { parseCreators } from './ficheWrite';
 
-export type SuggestSource = 'crossref' | 'crossref-title' | 'pdf' | 'rule' | 'none';
+export type SuggestSource = 'crossref' | 'crossref-pdf' | 'crossref-title' | 'pdf' | 'rule' | 'none';
 
 export const SOURCE_INFO: Record<SuggestSource, { icon: string; label: string; kind: 'sure' | 'check' | 'none' }> = {
   crossref: { icon: '✓', label: 'Trouvé avec le DOI (Crossref)', kind: 'sure' },
+  'crossref-pdf': { icon: '⚠', label: 'Trouvé avec le DOI lu dans le PDF (Crossref) : à vérifier', kind: 'check' },
   'crossref-title': { icon: '⚠', label: 'Trouvé par le titre (Crossref) : vérifiez que c’est le bon article', kind: 'check' },
   pdf: { icon: '⚠', label: 'Lu dans le PDF : à vérifier', kind: 'check' },
   rule: { icon: '⚠', label: 'Correction de forme proposée par Biblikube : à vérifier', kind: 'check' },
@@ -88,10 +90,10 @@ export function applySuggestions(r: RecordItem, values: Partial<Record<FieldId, 
     if (!v || (!v.value && !v.creators)) continue;
     switch (f) {
       case 'creators':
-        if (v.creators) n.creators = [...v.creators, ...n.creators.filter((c) => (c.creatorType ?? 'author') !== 'author')];
+        n.creators = [...(v.creators ?? parseCreators(v.value, 'author')), ...n.creators.filter((c) => (c.creatorType ?? 'author') !== 'author')];
         break;
       case 'editors':
-        if (v.creators) n.creators = [...n.creators.filter((c) => c.creatorType !== 'editor'), ...v.creators];
+        n.creators = [...n.creators.filter((c) => c.creatorType !== 'editor'), ...(v.creators ?? parseCreators(v.value, 'editor'))];
         break;
       case 'date':
         n.date = v.value;
@@ -99,6 +101,15 @@ export function applySuggestions(r: RecordItem, values: Partial<Record<FieldId, 
         break;
       case 'itemType':
         n.itemType = v.value;
+        break;
+      case 'publication':
+        if (n.itemType === 'webpage') n.websiteTitle = v.value;
+        else n.publication = v.value;
+        break;
+      case 'publisher':
+        if (n.itemType === 'report') n.institution = v.value;
+        else if (n.itemType === 'thesis') n.university = v.value;
+        else n.publisher = v.value;
         break;
       default:
         (n as unknown as Record<string, string>)[f] = v.value;
