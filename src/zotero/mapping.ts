@@ -84,3 +84,16 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
 };
 
 export const itemTypeLabel = (t: string) => ITEM_TYPE_LABELS[t] ?? t;
+
+/** Référence complète pour l'écran « Fiches » : ajoute les champs propres à chaque type. */
+export function toFicheRecord(item: ZItem): RecordItem {
+  const d = item.data;
+  return {
+    ...toRecord(item, []),
+    accessDate: str(d.accessDate),
+    websiteTitle: str(d.websiteTitle),
+    institution: str(d.institution),
+    university: str(d.university),
+    doiInExtra: !d.DOI && !!extractDoiFromExtra(d.extra ?? ''),
+  };
+}

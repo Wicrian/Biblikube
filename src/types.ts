@@ -43,6 +43,13 @@ export interface RecordItem {
   issue?: string;
   /** Nombre de notes et pièces jointes (PDF…) rattachées dans Zotero. */
   numChildren?: number;
+  /** Champs utiles à la vérification des fiches (lus à la demande, écran « Fiches »). */
+  accessDate?: string;
+  websiteTitle?: string;
+  institution?: string;
+  university?: string;
+  /** Le DOI n'est pas dans sa case, mais dans « Extra ». */
+  doiInExtra?: boolean;
 }
 
 export interface StageDecision {

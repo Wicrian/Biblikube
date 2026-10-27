@@ -187,6 +187,12 @@ export class ZoteroClient {
     return this.json<ZItem[]>(`${this.prefix}/items?itemKey=${keys.join(',')}&format=json&limit=50`);
   }
 
+  /** Jusqu'à 50 items, avec leur référence mise en forme par Zotero dans un style donné. */
+  itemsWithBib(keys: string[], style: string, locale: string): Promise<(ZItem & { bib?: string })[]> {
+    const q = `itemKey=${keys.join(',')}&format=json&include=data,bib&style=${encodeURIComponent(style)}&locale=${locale}&limit=50`;
+    return this.json<(ZItem & { bib?: string })[]>(`${this.prefix}/items?${q}`);
+  }
+
   children(itemKey: string): Promise<ZItem[]> {
     return this.all<ZItem>(`${this.prefix}/items/${itemKey}/children?format=json`);
   }

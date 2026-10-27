@@ -1,6 +1,6 @@
 // Vérification des fiches Zotero selon une norme (APA 7, adaptation UQAM).
 //
-// MAQUETTE : règles des cas les plus courants. Biblikube ne « certifie » pas une
+// Règles des cas les plus courants (version test). Biblikube ne « certifie » pas une
 // fiche : il signale ce qui manque ou semble mal rangé, et la personne décide.
 import type { Creator, RecordItem } from '../types';
 
@@ -25,7 +25,8 @@ export type FieldId =
   | 'url'
   | 'publisher'
   | 'bookTitle'
-  | 'editors';
+  | 'editors'
+  | 'accessDate';
 
 export const FIELD_LABELS: Record<FieldId, string> = {
   itemType: 'Type de document',
@@ -41,6 +42,7 @@ export const FIELD_LABELS: Record<FieldId, string> = {
   publisher: 'Éditeur / organisme',
   bookTitle: 'Titre du livre',
   editors: 'Directeurs (dir.)',
+  accessDate: 'Consulté le',
 };
 
 export interface Issue {
@@ -58,6 +60,22 @@ export const EXPECTED: Record<string, FieldId[]> = {
   report: ['creators', 'date', 'title', 'publisher', 'url'],
   thesis: ['creators', 'date', 'title', 'publisher', 'url'],
   webpage: ['creators', 'date', 'title', 'publication', 'url'],
+  blogPost: ['creators', 'date', 'title', 'publication', 'url'],
+  newspaperArticle: ['creators', 'date', 'title', 'publication'],
+  magazineArticle: ['creators', 'date', 'title', 'publication'],
+  document: ['creators', 'date', 'title'],
+};
+
+/** Types à qui l'APA réserve « Récupéré le [date de consultation] » dans le style UQAM. */
+const TYPE_FR: Record<string, string> = {
+  journalArticle: 'Article de revue',
+  book: 'Livre',
+  bookSection: 'Chapitre de livre',
+  report: 'Rapport',
+  thesis: 'Thèse',
+  webpage: 'Page web',
+  document: 'Document',
+  blogPost: 'Billet de blog',
 };
 
 const people = (r: RecordItem, type: string) => r.creators.filter((c) => (c.creatorType ?? 'author') === type);
@@ -77,6 +95,7 @@ export function fieldValue(r: RecordItem, f: FieldId): string {
     case 'title':
       return r.title;
     case 'publication':
+      if (r.itemType === 'webpage') return r.websiteTitle ?? (r.publication || '');
       return r.itemType === 'bookSection' ? '' : r.publication;
     case 'volume':
       return r.volume ?? '';
@@ -89,10 +108,21 @@ export function fieldValue(r: RecordItem, f: FieldId): string {
     case 'url':
       return r.url;
     case 'publisher':
-      return r.publisher ?? (['report', 'thesis'].includes(r.itemType) ? r.publication : '');
+      if (r.itemType === 'report') return r.institution ?? r.publisher ?? r.publication;
+      if (r.itemType === 'thesis') return r.university ?? r.publisher ?? r.publication;
+      return r.publisher ?? '';
+    case 'accessDate':
+      return formatAccess(r.accessDate);
     case 'bookTitle':
       return r.bookTitle ?? '';
   }
+}
+
+/** « 2026-10-12 14:00:00 » → « 12 octobre 2026 ». */
+export function formatAccess(v?: string): string {
+  const m = (v ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return v ?? '';
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export const creatorText = (c: Creator) => (c.name ? c.name : [c.lastName, c.firstName].filter(Boolean).join(', '));
@@ -116,6 +146,8 @@ export function checkRecord(r: RecordItem, style: CiteStyle): Issue[] {
     if (fieldValue(r, f).trim()) continue;
     if (f === 'doi') out.push({ field: f, kind: 'manque', text: 'Pas de DOI. La plupart des articles récents en ont un : à vérifier.' });
     else if (f === 'issue') out.push({ field: f, kind: 'conseil', text: 'Numéro absent (à ajouter si la revue en a un).' });
+    else if (f === 'date' && ['webpage', 'blogPost', 'document'].includes(r.itemType))
+      out.push({ field: f, kind: 'conseil', text: 'Pas de date : vérifiez s’il y en a une sur la page. Sinon, « s. d. » (sans date) est correct.' });
     else if (f === 'date') out.push({ field: f, kind: 'manque', text: 'Pas de date : la référence affichera « s. d. » (sans date).' });
     else if (f === 'url' && r.itemType === 'thesis') out.push({ field: f, kind: 'conseil', text: 'Lien vers le dépôt institutionnel conseillé.' });
     else out.push({ field: f, kind: 'manque', text: MISSING[f] ?? `${FIELD_LABELS[f]} : à remplir.` });
@@ -137,9 +169,53 @@ export function checkRecord(r: RecordItem, style: CiteStyle): Issue[] {
       out.push({ field: 'creators', kind: 'forme', text: `« ${creatorText(c)} » est un organisme : à mettre en un seul champ (mode « nom unique »).` });
       break;
     }
+  if (r.itemType === 'journalArticle' && r.doiInExtra) out.push({ field: 'doi', kind: 'forme', text: 'Le DOI est rangé dans « Extra » : à mettre dans la case DOI.' });
+  out.push(...typeIssues(r));
+  out.push(...accessIssues(r));
   if (r.itemType === 'journalArticle' && !r.publication && !r.doi && r.url)
     out.push({ field: 'itemType', kind: 'forme', text: 'Enregistré comme article, mais sans revue : est-ce plutôt une page web ou un rapport ?' });
   return out;
+}
+
+const PDF_URL = /\.pdf($|[?#])/i;
+const THESIS_WORDS = /\b(thèse|mémoire de maîtrise|mémoire \(|thesis|dissertation)\b/i;
+const JOURNAL_WORDS = /\b(journal|revue|review|annals|bulletin|quarterly)\b/i;
+
+/** Mauvais type de document : les cas les plus fréquents. */
+function typeIssues(r: RecordItem): Issue[] {
+  const t = r.itemType;
+  const msg = (likely: string, why: string): Issue => ({ field: 'itemType', kind: 'forme', text: `Type à vérifier : ${why}, c’est sans doute ${likely}.` });
+  if (t === 'document')
+    return [{ field: 'itemType', kind: 'forme', text: 'Type « Document » trop général : le style ne sait pas bien le présenter. Choisissez le vrai type (article, rapport, page web, chapitre…).' }];
+  if (['webpage', 'report', 'blogPost'].includes(t) && (r.doi || /doi\.org\//i.test(r.url)) && JOURNAL_WORDS.test(fieldValue(r, 'publication') + ' ' + r.url))
+    return [msg('un « Article de revue »', 'la fiche a un DOI et vient d’une revue')];
+  if (t !== 'thesis' && THESIS_WORDS.test(`${r.title} ${r.publication}`)) return [msg('une « Thèse »', 'le titre parle de thèse ou de mémoire')];
+  if (t === 'book' && (r.bookTitle || /^\d+\s*[-–]\s*\d+$/.test(r.pages.trim()))) return [msg('un « Chapitre de livre »', 'la fiche a des pages « de… à… » ou un titre de livre')];
+  if (t === 'journalArticle' && r.isbn && !r.doi) return [msg('un « Livre » ou un « Chapitre de livre »', 'la fiche a un ISBN')];
+  if (t === 'webpage' && PDF_URL.test(r.url)) return [msg('un « Rapport » ou un « Document »', 'le lien mène à un PDF')];
+  return [];
+}
+
+/**
+ * Date de consultation. Dans le style UQAM, « Récupéré le [date] de [URL] »
+ * n'apparaît que pour une page web sans date de publication.
+ */
+function accessIssues(r: RecordItem): Issue[] {
+  if (!r.url || r.doi) return [];
+  if (r.itemType === 'webpage') {
+    if (!r.date && !r.accessDate)
+      return [{ field: 'accessDate', kind: 'manque', text: 'Page sans date : le style écrit « Récupéré le [date de consultation] de [URL] ». Remplissez « Consulté le ».' }];
+    return [];
+  }
+  if (!r.date && r.accessDate && ['document', 'report', 'blogPost'].includes(r.itemType))
+    return [
+      {
+        field: 'accessDate',
+        kind: 'forme',
+        text: `Avec le type « ${TYPE_FR[r.itemType] ?? r.itemType} », la date de consultation ne s’affiche pas. Si c’est une page web, changez le type en « Page web ».`,
+      },
+    ];
+  return [];
 }
 
 export const issueCount = (issues: Issue[]) => issues.filter((i) => i.kind !== 'conseil').length;
@@ -195,8 +271,11 @@ export function referenceHtml(r: RecordItem, style: CiteStyle): string {
       const samePub = au.length === 1 && au[0].name && au[0].name === pub;
       return `${who} (${year}). <i>${title}</i>${kind}.${pub && !samePub ? ` ${esc(pub)}.` : pub ? '' : ` ${missing(r.itemType === 'thesis' ? 'université' : 'organisme')}.`}${doi || ` ${missing('URL')}`}`;
     }
-    case 'webpage':
-      return `${who} (${year}). <i>${title}</i>. ${r.publication ? `${esc(r.publication)}.` : missing('site')}${doi || ` ${missing('URL')}`}`;
+    case 'webpage': {
+      const site = fieldValue(r, 'publication');
+      const link = r.url ? (!r.year && r.accessDate ? ` ${fr ? 'Récupéré le' : 'Retrieved'} ${esc(formatAccess(r.accessDate))} ${fr ? 'de' : 'from'} ${esc(r.url)}` : ` ${esc(r.url)}`) : ` ${missing('URL')}`;
+      return `${who} (${year}). <i>${title}</i>. ${site ? `${esc(site)}.` : missing('site')}${link}`;
+    }
     default:
       return `${who} (${year}). <i>${title}</i>. ${r.publisher ? `${esc(r.publisher)}.` : ''}${doi}`;
   }
