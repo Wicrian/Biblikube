@@ -105,11 +105,11 @@ export default function App() {
 }
 
 /** Cadre commun : grand panneau arrondi avec une barre d'icônes à gauche. */
-function Frame({ rail, children, onLogo, railClass = '' }: { rail: ReactNode; children: ReactNode; onLogo?: () => void; railClass?: string }) {
+function Frame({ rail, children, onLogo }: { rail: ReactNode; children: ReactNode; onLogo?: () => void }) {
   return (
     <div className="app">
       <div className="frame">
-        <aside className={`rail ${railClass}`}>
+        <aside className="rail">
           <button className="logo" onClick={onLogo} title="Biblikube – accueil">
             <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" />
           </button>
@@ -165,7 +165,14 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
     project.mode ? (hasRecords ? (project.mode === 'organise' ? 'organisation' : 'screening') : 'import') : hasRecords ? 'screening' : project.library ? 'import' : 'protocol',
   );
   const [pulse, setPulse] = useState<View | null>(null);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  // Groupes de la barre ouverts à la main (gardés pour cette revue, dans ce navigateur).
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(`litflow.railOpen.${project.id}`) ?? '{}');
+    } catch {
+      return {};
+    }
+  });
   // Chronométrés : le tri titre-résumé (tant qu'il reste des articles à trier) et l'organisation.
   const measured = view === 'organisation' || (view === 'screening' && screeningKeys(project).some((k) => !project.screening[k]));
   const timeLog = useTimeTracker(view, measured);
@@ -232,20 +239,22 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
             : 'Synchronisé avec Zotero';
 
   const v = VIEWS[view];
-  // MAQUETTE barre de gauche : a = groupes repliables, b = + style léger, c = + outils regroupés.
-  const variant = (() => {
-    try {
-      return localStorage.getItem('litflow.railVariant') ?? '';
-    } catch {
-      return '';
-    }
-  })();
+  // Barre de gauche : le groupe de l'étape en cours est toujours ouvert ; les autres s'ouvrent d'un clic.
   const groupOf = (id: View) => GROUPS.find((g) => g.views.includes(id))?.label;
   const groupSummary = (views: View[]) => views.map((id) => (id === 'screening' || id === 'fulltext' || id === 'organisation' ? counts[id] : undefined)).find(Boolean);
-  const isOpen = (label: string) => !variant || label === groupOf(view) || !!openGroups[label];
+  const isOpen = (label: string) => label === groupOf(view) || !!openGroups[label];
+  const toggleGroup = (label: string) => {
+    if (label === groupOf(view)) return;
+    const next = { ...openGroups, [label]: !openGroups[label] };
+    setOpenGroups(next);
+    try {
+      localStorage.setItem(`litflow.railOpen.${project.id}`, JSON.stringify(next));
+    } catch {
+      /* rien */
+    }
+  };
   return (
     <Frame
-      railClass={variant ? `rail-v-${variant}` : ''}
       onLogo={onHome}
       rail={
         <>
@@ -254,20 +263,17 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
               .filter((g) => g.views.length)
               .map((g) => (
               <div key={g.label} className={`rail-group ${isOpen(g.label) ? '' : 'closed'}`}>
-                {variant ? (
-                  <button
-                    className="rail-group-label rail-group-toggle"
-                    onClick={() => g.label !== groupOf(view) && setOpenGroups((o) => ({ ...o, [g.label]: !o[g.label] }))}
-                    title={isOpen(g.label) ? 'Replier' : 'Déplier'}
-                  >
-                    {isOpen(g.label) ? '▾' : '▸'} {g.label}
-                    {!isOpen(g.label) && groupSummary(g.views) && <span className="rail-group-sum">{groupSummary(g.views)}</span>}
-                    {!isOpen(g.label) && g.views.includes('dedup') && dupOpen > 0 && <span className="rail-group-dot" />}
-                  </button>
-                ) : (
-                  <div className="rail-group-label">{g.label}</div>
-                )}
-                {isOpen(g.label) && g.views.map((id) => (
+                <button
+                  className="rail-group-label rail-group-toggle"
+                  onClick={() => toggleGroup(g.label)}
+                  title={g.label === groupOf(view) ? 'Étape en cours' : isOpen(g.label) ? 'Replier' : 'Déplier'}
+                  aria-expanded={isOpen(g.label)}
+                >
+                  {isOpen(g.label) ? '▾' : '▸'} {g.label}
+                  {!isOpen(g.label) && groupSummary(g.views) && <span className="rail-group-sum">{groupSummary(g.views)}</span>}
+                  {!isOpen(g.label) && g.views.includes('dedup') && dupOpen > 0 && <span className="rail-group-dot" />}
+                </button>
+                {g.views.map((id) => (
                   <RailItem
                     key={id}
                     icon={VIEWS[id].icon}
@@ -296,8 +302,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
           {project.mode && !project.guide?.active && (
             <RailItem icon={<Compass />} label="Guide" onClick={() => update((cur) => ({ ...cur, guide: { wizard: false, showAll: false, visited: [], ...cur.guide, active: true } }))} />
           )}
-          {variant === 'c' ? (
-            <div className="rail-tools">
+          <div className="rail-tools">
               <button onClick={onHome} title="Mes revues">
                 <HomeIcon />
                 <span>Revues</span>
@@ -310,14 +315,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
                 <SettingsIcon />
                 <span>Zotero</span>
               </button>
-            </div>
-          ) : (
-            <>
-              <RailItem icon={<HomeIcon />} label="Mes revues" onClick={onHome} />
-              <RailItem icon={<Palette />} label="Style" onClick={onTheme} />
-              <RailItem icon={<SettingsIcon />} label="Zotero" onClick={onSettings} />
-            </>
-          )}
+          </div>
         </>
       }
     >
