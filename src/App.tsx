@@ -35,6 +35,12 @@ export default function App() {
 
   const refresh = () => listProjects().then(setProjects);
   useEffect(() => void refresh(), []);
+  // Ouvrir une autre revue depuis une revue (ex. après un transfert vers une autre bibliothèque).
+  useEffect(() => {
+    const onOpen = (e: Event) => setCurrent((e as CustomEvent<Project>).detail);
+    window.addEventListener('biblikube:open-project', onOpen);
+    return () => window.removeEventListener('biblikube:open-project', onOpen);
+  }, []);
 
   const open = async (p: Project) => {
     await saveProject(p);

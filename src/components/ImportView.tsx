@@ -6,6 +6,7 @@ import { mergeImport } from '../zotero/mapping';
 import { importFromZotero } from '../zotero/sync';
 import { reconcileFromZotero } from '../zotero/pull';
 import { RayyanImport } from './RayyanImport';
+import { TransferDialog } from './TransferDialog';
 
 const KINDS: [SourceKind, string][] = [
   ['database', 'Base de données'],
@@ -23,6 +24,7 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [result, setResult] = useState('');
+  const [transfer, setTransfer] = useState(false);
 
   const baseClient = settings.apiKey ? new ZoteroClient(settings.apiKey) : null;
 
@@ -285,6 +287,20 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
         </section>
       )}
       {!compact && total > 0 && <RayyanImport />}
+      {!compact && total > 0 && p.library && settings.apiKey && (
+        <section className="panel stack">
+          <h2 style={{ margin: 0 }}>Transférer vers une autre bibliothèque</h2>
+          <p className="small muted" style={{ margin: 0 }}>
+            Vous avez travaillé sur une copie de vos références (autre bibliothèque ou autre collection) ? Biblikube peut reprendre votre travail
+            (tri, texte intégral, doublons, organisation) sur les mêmes références rangées ailleurs, dans une nouvelle revue. Cette revue-ci n’est
+            pas modifiée.
+          </p>
+          <button className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setTransfer(true)}>
+            Transférer la revue…
+          </button>
+        </section>
+      )}
+      {transfer && <TransferDialog libraries={libraries} onClose={() => setTransfer(false)} />}
     </div>
   );
 }
