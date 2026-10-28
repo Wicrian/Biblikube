@@ -182,6 +182,22 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.5 — octobre 2026**
+- **Fiches** : on corrige directement dans Biblikube, puis « Enregistrer dans Zotero ». Seuls les champs changés sont
+  envoyés ; les anciennes valeurs sont gardées dans une note « Biblikube – anciennes valeurs » attachée à la fiche, et
+  le bouton « Annuler » les remet. Le type de document se change toujours dans Zotero.
+- Propositions de correction, chacune avec sa fiabilité : DOI lu dans le PDF rangé dans Zotero (lu dans le navigateur),
+  puis Crossref avec le DOI ou le titre exact. Le titre du livre venant de Crossref est toujours « à vérifier » (risque
+  de confusion avec la collection).
+- Auteurs et directeurs saisis en Nom / Prénom séparés (ou organisme), comme dans Zotero.
+- Repère un volume qui est en fait une édition (fréquent avec Cairn) et propose la case « Édition ».
+- Projets de loi et lois vérifiés selon le guide de l’UQAM (inspiré du Manuel canadien de la référence juridique) :
+  numéro, titre, année, session et législature, URL ; recueil et chapitre pour les lois.
+- Tous les types de fiches Zotero sont bien lus partout (acte juridique, affaire, projet de loi… n’apparaissent plus
+  « sans titre ») ; pour un type dont les règles ne sont pas encore connues, Biblikube le dit. Noms de types alignés
+  sur Zotero (« Acte juridique », « Affaire (jugement) »).
+- Fiches relues automatiquement au retour dans l’onglet ; bouton « Revérifier » à côté de la fiche.
+
 **0.4 — octobre 2026**
 - Nouvel écran **Fiches** (sous Organisation, en essai) : vérifie que les fiches Zotero des références classées sont
   complètes selon l’APA 7, adaptation UQAM (initiales ou prénoms) ou APA 7 en anglais. Il signale les champs manquants,
