@@ -182,6 +182,13 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.6 — octobre 2026**
+- **Transférer une revue vers une autre bibliothèque** (écran Identification) : pour reprendre son travail sur les mêmes
+  références rangées ailleurs (par exemple la bibliothèque de groupe partagée avec sa direction). Biblikube associe les
+  références (DOI, titre), montre un bilan (retrouvées, à vérifier, non retrouvées), puis crée une nouvelle revue avec le
+  tri, le texte intégral, les doublons, l’organisation, le protocole et le temps de travail. La revue d’origine n’est
+  pas modifiée.
+
 **0.5 — octobre 2026**
 - **Fiches** : on corrige directement dans Biblikube, puis « Enregistrer dans Zotero ». Seuls les champs changés sont
   envoyés ; les anciennes valeurs sont gardées dans une note « Biblikube – anciennes valeurs » attachée à la fiche, et
