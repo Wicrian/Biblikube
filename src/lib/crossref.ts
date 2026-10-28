@@ -81,8 +81,8 @@ export function crossrefSuggestions(
   const flagged = new Set<FieldId>(issues.map((i) => i.field));
   const out: Suggestion[] = [];
   const add = (field: FieldId, value: string | undefined | null, extra: Partial<Suggestion> = {}) => {
-    if (!value || !flagged.has(field)) return;
-    out.push({ field, value, source, note, ...extra });
+    if ((!value && !extra.choices) || !flagged.has(field)) return;
+    out.push({ field, value: value ?? '', source, note, ...extra });
   };
   if (source === 'crossref-title' && !r.doi) {
     out.push({ field: 'doi', value: w.DOI, source, note: `Notice trouvée sur Crossref : « ${w.title?.[0] ?? ''} »${yearOf(w) ? ` (${yearOf(w)})` : ''}. Vérifiez que c’est bien le même texte.` });
@@ -94,7 +94,12 @@ export function crossrefSuggestions(
     add('pages', w.page ?? w['article-number'], w.page ? {} : { note: 'Numéro d’article (la revue ne pagine pas).' });
   }
   if (r.itemType === 'bookSection') {
-    add('bookTitle', w['container-title']?.[0]);
+    // Crossref range parfois le titre de la collection avec (ou à la place de) celui du livre.
+    const books = w['container-title'] ?? [];
+    if (books.length > 1)
+      add('bookTitle', '', { source: 'crossref-book', choices: books, note: 'Crossref donne plusieurs titres (le livre et sa collection) : choisissez celui du livre.' });
+    else
+      add('bookTitle', books[0], { source: 'crossref-book', note: 'Crossref confond parfois le titre du livre et celui de sa collection : vérifiez sur la page de l’éditeur.' });
     add('pages', w.page);
     add('publisher', w.publisher);
     if (w.editor?.length) {

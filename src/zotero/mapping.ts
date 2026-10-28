@@ -33,7 +33,7 @@ export function toRecord(item: ZItem, sources: string[]): RecordItem {
     date: itemDate(d),
     year: parseYear(itemDate(d)),
     abstract: d.abstractNote ?? '',
-    doi: d.DOI ?? extractDoiFromExtra(d.extra ?? ''),
+    doi: d.DOI || extractDoiFromExtra(d.extra ?? ''),
     url: d.url ?? '',
     publication: itemPublication(d),
     language: d.language ?? '',
@@ -128,5 +128,6 @@ export function toFicheRecord(item: ZItem): RecordItem {
     number: str(s_(d, 'billNumber', 'publicLawNumber', 'docketNumber', 'reportNumber', 'patentNumber', 'number')),
     authority: str(s_(d, 'legislativeBody', 'court', 'issuingAuthority')),
     session: str(d.session),
+    edition: str(d.edition),
   };
 }

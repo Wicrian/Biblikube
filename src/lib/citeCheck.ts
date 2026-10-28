@@ -28,7 +28,9 @@ export type FieldId =
   | 'editors'
   | 'accessDate'
   | 'number'
-  | 'authority';
+  | 'authority'
+  | 'session'
+  | 'edition';
 
 export const FIELD_LABELS: Record<FieldId, string> = {
   itemType: 'Type de document',
@@ -47,6 +49,8 @@ export const FIELD_LABELS: Record<FieldId, string> = {
   accessDate: 'Consulté le',
   number: 'Numéro',
   authority: 'Assemblée / tribunal',
+  session: 'Session et législature',
+  edition: 'Édition',
 };
 
 /** Libellés selon le type de document (proches de ceux de Zotero). */
@@ -57,10 +61,19 @@ const LABELS_BY_TYPE: Record<string, Partial<Record<FieldId, string>>> = {
   report: { publisher: 'Organisme', number: 'Numéro du rapport' },
   thesis: { publisher: 'Université' },
   bill: { number: 'Numéro du projet de loi', authority: 'Assemblée (organe législatif)', publication: 'Code' },
-  statute: { publication: 'Recueil (ex. RLRQ, LC)', number: 'Chapitre (ex. S-4.2)', title: 'Nom de l’acte', date: 'Date de promulgation' },
+  statute: { publication: 'Recueil', number: 'Chapitre', title: 'Nom de l’acte', date: 'Date de promulgation' },
   case: { title: 'Nom de l’affaire', date: 'Date de la décision', publication: 'Recueil', number: 'Numéro de dossier', authority: 'Tribunal' },
 };
 export const fieldLabel = (itemType: string, f: FieldId) => LABELS_BY_TYPE[itemType]?.[f] ?? FIELD_LABELS[f];
+
+/** Exemples affichés dans les cases à remplir. */
+const EXAMPLES: Record<string, Partial<Record<FieldId, string>>> = {
+  bill: { number: 'ex. 15 (Québec) ou C-11 (fédéral)', session: 'ex. 1re session, 43e législature' },
+  statute: { publication: 'ex. RLRQ, LQ ou LRC 1985', number: 'ex. S-4.2' },
+  bookSection: { edition: 'ex. 3' },
+  book: { edition: 'ex. 3' },
+};
+export const fieldExample = (itemType: string, f: FieldId) => EXAMPLES[itemType]?.[f];
 
 export interface Issue {
   field: FieldId;
@@ -82,8 +95,9 @@ export const EXPECTED: Record<string, FieldId[]> = {
   magazineArticle: ['creators', 'date', 'title', 'publication'],
   document: ['creators', 'date', 'title'],
   // Documents juridiques : pas d'auteur exigé.
-  bill: ['title', 'number', 'authority', 'date', 'url'],
-  statute: ['title', 'publication', 'number'],
+  // Lois et projets de loi : guide de l'UQAM (inspiré du Manuel canadien de la référence juridique).
+  bill: ['number', 'title', 'date', 'session', 'url'],
+  statute: ['title', 'publication', 'number', 'url'],
   case: ['title', 'authority', 'date', 'publication', 'number'],
 };
 
@@ -91,7 +105,9 @@ export const EXPECTED: Record<string, FieldId[]> = {
 export const isKnownType = (t: string) => t in EXPECTED;
 
 /** Champs facultatifs selon le type (signalés comme conseil). */
-const OPTIONAL: Record<string, FieldId[]> = { bill: ['url'], case: ['publication', 'number'], thesis: ['url'] };
+const OPTIONAL: Record<string, FieldId[]> = { case: ['publication', 'number'], thesis: ['url'] };
+
+export const LEGAL_TYPES = ['bill', 'statute', 'case'];
 
 /** Types à qui l'APA réserve « Récupéré le [date de consultation] » dans le style UQAM. */
 const TYPE_FR: Record<string, string> = {
@@ -144,6 +160,10 @@ export function fieldValue(r: RecordItem, f: FieldId): string {
       return r.number ?? '';
     case 'authority':
       return r.authority ?? '';
+    case 'session':
+      return r.session ?? '';
+    case 'edition':
+      return r.edition ?? '';
     case 'bookTitle':
       return r.bookTitle ?? '';
   }
@@ -202,6 +222,12 @@ export function checkRecord(r: RecordItem, style: CiteStyle): Issue[] {
       break;
     }
   if (r.itemType === 'journalArticle' && r.doiInExtra) out.push({ field: 'doi', kind: 'forme', text: 'Le DOI est rangé dans « Extra » : à mettre dans la case DOI.' });
+  if (['book', 'bookSection'].includes(r.itemType) && r.volume && !r.edition && /^\d{1,2}$/.test(r.volume.trim()))
+    out.push({
+      field: 'volume',
+      kind: 'conseil',
+      text: `Volume « ${r.volume} » : s’agit-il plutôt de l’édition (${r.volume}${r.volume.trim() === '1' ? 're' : 'e'} éd.) ? Cairn et d’autres plateformes confondent souvent les deux. Si oui, videz « Volume » et mettez ${r.volume} dans « Édition ».`,
+    });
   out.push(...typeIssues(r));
   out.push(...accessIssues(r));
   if (r.itemType === 'journalArticle' && !r.publication && !r.doi && r.url)
@@ -294,7 +320,12 @@ export function referenceHtml(r: RecordItem, style: CiteStyle): string {
     case 'bookSection': {
       const eds = people(r, 'editor');
       const ed = eds.length ? `${esc(eds.map((c) => (c.name ? c.name : `${initials(c.firstName ?? '')} ${c.lastName}`)).join(' et '))} (${fr ? 'dir.' : eds.length > 1 ? 'Eds.' : 'Ed.'}), ` : `${missing('dir.')} `;
-      return `${who} (${year}). ${title}. ${fr ? 'Dans' : 'In'} ${ed}<i>${r.bookTitle ? esc(r.bookTitle) : missing('livre')}</i> (${fr ? 'p.' : 'pp.'} ${pages || missing('pages')}). ${r.publisher ? esc(r.publisher) : missing('éditeur')}.${doi}`;
+      const loc = [
+        r.edition ? `${esc(r.edition)}${fr ? (r.edition === '1' ? 're' : 'e') : 'th'} ${fr ? 'éd.' : 'ed.'}` : '',
+        r.volume ? `vol. ${esc(r.volume)}` : '',
+        `${fr ? 'p.' : 'pp.'} ${pages || missing('pages')}`,
+      ].filter(Boolean).join(', ');
+      return `${who} (${year}). ${title}. ${fr ? 'Dans' : 'In'} ${ed}<i>${r.bookTitle ? esc(r.bookTitle) : missing('livre')}</i> (${loc}). ${r.publisher ? esc(r.publisher) : missing('éditeur')}.${doi}`;
     }
     case 'report':
     case 'thesis': {
@@ -308,14 +339,14 @@ export function referenceHtml(r: RecordItem, style: CiteStyle): string {
       const link = r.url ? (!r.year && r.accessDate ? ` ${fr ? 'Récupéré le' : 'Retrieved'} ${esc(formatAccess(r.accessDate))} ${fr ? 'de' : 'from'} ${esc(r.url)}` : ` ${esc(r.url)}`) : ` ${missing('URL')}`;
       return `${who} (${year}). <i>${title}</i>. ${site ? `${esc(site)}.` : missing('site')}${link}`;
     }
-    case 'bill':
-    case 'statute': {
-      const code = r.publication ? `. ${esc(r.publication)}` : '';
-      const num = r.number ? ` c. ${esc(r.number)}` : r.itemType === 'bill' ? ` ${missing('numéro')}` : '';
-      const by = r.authority ? ` ${esc(r.authority)}` : r.itemType === 'bill' ? ` ${missing('assemblée')}` : '';
-      const when = r.year ? ` (${r.year})` : '';
-      return `<i>${title}</i>${code},${num}${by}${when}.${r.url ? ` ${esc(r.url)}` : ''}`;
+    case 'bill': {
+      // « Projet de loi 15, Titre (2023), 1re session, 43e législature. URL » (guide UQAM).
+      const sess = r.session ? `, ${esc(r.session)}` : `, ${missing('session et législature')}`;
+      return `Projet de loi ${r.number ? esc(r.number) : missing('numéro')}, <i>${title}</i> (${r.year ?? missing('année')})${sess}.${r.url ? ` ${esc(r.url)}` : ` ${missing('URL')}`}`;
     }
+    case 'statute':
+      // « Titre, RLRQ, c. S-4.2. URL » (guide UQAM).
+      return `<i>${title}</i>, ${r.publication ? esc(r.publication) : missing('recueil')}, c. ${r.number ? esc(r.number) : missing('chapitre')}.${r.url ? ` ${esc(r.url)}` : ` ${missing('URL')}`}`;
     case 'case':
       return `<i>${title}</i>, ${r.number ? esc(r.number) : ''}${r.authority ? ` (${esc(r.authority)})` : ` ${missing('tribunal')}`} (${year}).${r.url ? ` ${esc(r.url)}` : ''}`;
     default:

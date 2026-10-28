@@ -7,11 +7,12 @@ import type { Creator, RecordItem } from '../types';
 import type { FieldId } from './citeCheck';
 import { parseCreators } from './ficheWrite';
 
-export type SuggestSource = 'crossref' | 'crossref-pdf' | 'crossref-title' | 'pdf' | 'rule' | 'none';
+export type SuggestSource = 'crossref' | 'crossref-pdf' | 'crossref-title' | 'crossref-book' | 'pdf' | 'rule' | 'none';
 
 export const SOURCE_INFO: Record<SuggestSource, { icon: string; label: string; kind: 'sure' | 'check' | 'none' }> = {
   crossref: { icon: '✓', label: 'Trouvé avec le DOI (Crossref)', kind: 'sure' },
   'crossref-pdf': { icon: '⚠', label: 'Trouvé avec le DOI lu dans le PDF (Crossref) : à vérifier', kind: 'check' },
+  'crossref-book': { icon: '⚠', label: 'Trouvé sur Crossref : vérifiez que c’est le livre, pas la collection', kind: 'check' },
   'crossref-title': { icon: '⚠', label: 'Trouvé par le titre (Crossref) : vérifiez que c’est le bon article', kind: 'check' },
   pdf: { icon: '⚠', label: 'Lu dans le PDF : à vérifier', kind: 'check' },
   rule: { icon: '⚠', label: 'Correction de forme proposée par Biblikube : à vérifier', kind: 'check' },
@@ -24,6 +25,8 @@ export interface Suggestion {
   source: SuggestSource;
   /** Précision affichée sous la proposition. */
   note?: string;
+  /** Plusieurs valeurs possibles : la personne choisit. */
+  choices?: string[];
   /** Pour les auteurs et directeurs. */
   creators?: Creator[];
 }
@@ -87,7 +90,7 @@ export function suggestionsFor(r: RecordItem): Suggestion[] {
 export function applySuggestions(r: RecordItem, values: Partial<Record<FieldId, { value: string; creators?: Creator[] }>>): RecordItem {
   const n: RecordItem = { ...r, creators: [...r.creators] };
   for (const [f, v] of Object.entries(values) as [FieldId, { value: string; creators?: Creator[] }][]) {
-    if (!v || (!v.value && !v.creators)) continue;
+    if (!v) continue;
     switch (f) {
       case 'creators':
         n.creators = [...(v.creators ?? parseCreators(v.value, 'author')), ...n.creators.filter((c) => (c.creatorType ?? 'author') !== 'author')];

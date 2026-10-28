@@ -8,7 +8,7 @@ import type { ZItemData } from '../zotero/api';
 import { fieldLabel, fieldValue, type FieldId } from './citeCheck';
 
 /** Champs modifiables depuis Biblikube (le type de document se change dans Zotero). */
-export const EDITABLE: FieldId[] = ['creators', 'editors', 'date', 'title', 'publication', 'volume', 'issue', 'pages', 'doi', 'url', 'publisher', 'bookTitle', 'accessDate', 'number', 'authority'];
+export const EDITABLE: FieldId[] = ['creators', 'editors', 'date', 'title', 'publication', 'volume', 'issue', 'pages', 'doi', 'url', 'publisher', 'bookTitle', 'accessDate', 'number', 'authority', 'session', 'edition'];
 
 /** Nom du champ Zotero selon le type de document (null : ce type n'a pas ce champ). */
 export function zoteroField(itemType: string, f: FieldId): string | null {
@@ -22,6 +22,10 @@ export function zoteroField(itemType: string, f: FieldId): string | null {
       return f;
     case 'number':
       return { bill: 'billNumber', statute: 'publicLawNumber', case: 'docketNumber', report: 'reportNumber', patent: 'patentNumber' }[itemType] ?? null;
+    case 'session':
+      return ['bill', 'hearing'].includes(itemType) ? 'session' : null;
+    case 'edition':
+      return ['book', 'bookSection'].includes(itemType) ? 'edition' : null;
     case 'authority':
       return { bill: 'legislativeBody', hearing: 'legislativeBody', case: 'court', patent: 'issuingAuthority' }[itemType] ?? null;
     case 'publication':
@@ -90,7 +94,7 @@ export function buildPatch(r: RecordItem, edits: Partial<Record<FieldId, Edit>>)
     changed.push(f);
     if (f === 'creators' || f === 'editors') {
       const type = f === 'creators' ? 'author' : 'editor';
-      const next = e.creators && creatorsMatch(e.creators, e.value) ? e.creators : parseCreators(e.value, type);
+      const next = (e.creators ?? parseCreators(e.value, type)).filter((c) => (c.name ?? '').trim() || (c.lastName ?? '').trim() || (c.firstName ?? '').trim());
       const base: Creator[] = creators ?? r.creators;
       const others: Creator[] = base.filter((c) => (c.creatorType ?? 'author') !== type);
       creators = type === 'author' ? [...next, ...others] : [...others, ...next];
@@ -102,7 +106,6 @@ export function buildPatch(r: RecordItem, edits: Partial<Record<FieldId, Edit>>)
   return { patch, changed };
 }
 
-const creatorsMatch = (cs: Creator[], text: string) => cs.map((c) => (c.name ? c.name : `${c.lastName}, ${c.firstName}`)).join(' ; ') === text.trim();
 
 const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 

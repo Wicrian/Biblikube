@@ -17,10 +17,25 @@ describe('types juridiques et autres types Zotero', () => {
   it('projet de loi : numéro et assemblée vérifiés, pas d’auteur exigé', () => {
     const r = toFicheRecord(item({ itemType: 'bill', title: 'Loi visant à rendre le système de santé et de services sociaux plus efficace', date: '2023', billNumber: '', legislativeBody: '' }));
     const f = checkRecord(r, 'uqam').map((i) => `${i.field}:${i.kind}`);
-    expect(f).toEqual(['number:manque', 'authority:manque', 'url:conseil']);
-    const ok = toFicheRecord(item({ itemType: 'bill', title: 'Loi…', date: '2023', billNumber: '15', legislativeBody: 'Assemblée nationale du Québec', url: 'https://www.assnat.qc.ca' }));
+    expect(f).toEqual(['number:manque', 'session:manque', 'url:manque']);
+    const ok = toFicheRecord(item({ itemType: 'bill', title: 'Loi…', date: '2023', billNumber: '15', legislativeBody: 'Assemblée nationale du Québec', session: '1re session, 43e législature', url: 'https://www.assnat.qc.ca' }));
     expect(checkRecord(ok, 'uqam')).toEqual([]);
     expect(buildPatch(r, { number: { value: '15' }, authority: { value: 'Assemblée nationale du Québec' } }).patch).toEqual({ billNumber: '15', legislativeBody: 'Assemblée nationale du Québec' });
+  });
+  it('volume qui ressemble à une édition (chapitre Cairn)', () => {
+    const r = toFicheRecord(item({ itemType: 'bookSection', title: 'Chapitre 22', creators: [{ creatorType: 'author', lastName: 'Étienne', firstName: 'Catherine' }], date: '2024', bookTitle: 'Développement du pouvoir d’agir', publisher: 'Presses de l’EHESP', pages: '297-304', volume: '3' }));
+    const v = checkRecord(r, 'uqam').find((i) => i.field === 'volume');
+    expect(v?.kind).toBe('conseil');
+    expect(v?.text).toMatch(/3e éd\./);
+    expect(buildPatch(r, { volume: { value: '' }, edition: { value: '3' } }).patch).toEqual({ volume: '', edition: '3' });
+  });
+  it('directeurs saisis nom et prénom séparés', () => {
+    const r = toFicheRecord(item({ itemType: 'bookSection', title: 'Ch.', creators: [{ creatorType: 'author', lastName: 'Étienne', firstName: 'Catherine' }] }));
+    const eds = [{ lastName: 'Jouffray', firstName: 'Claire', creatorType: 'editor' }, { lastName: '', firstName: '', creatorType: 'editor' }];
+    expect(buildPatch(r, { editors: { value: 'Jouffray, Claire ; ', creators: eds } }).patch.creators).toEqual([
+      { creatorType: 'author', firstName: 'Catherine', lastName: 'Étienne' },
+      { creatorType: 'editor', firstName: 'Claire', lastName: 'Jouffray' },
+    ]);
   });
   it('écrit dans les bons champs pour un acte juridique', () => {
     const r = toFicheRecord(item({ itemType: 'statute', nameOfAct: 'Loi X', code: '' }));

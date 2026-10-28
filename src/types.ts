@@ -54,6 +54,7 @@ export interface RecordItem {
   number?: string;
   authority?: string;
   session?: string;
+  edition?: string;
 }
 
 export interface StageDecision {

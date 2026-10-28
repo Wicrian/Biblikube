@@ -14,7 +14,7 @@ import { itemTypeLabel, toFicheRecord } from '../zotero/mapping';
 import { zoteroSelectLink, type ZItemData } from '../zotero/api';
 import { buildPatch, canEdit, editValue, oldValuesNote, type Edit } from '../lib/ficheWrite';
 import { lookupFiche, lookupWorth, type Lookup } from '../lib/ficheLookup';
-import { CITE_STYLES, EXPECTED, FIELD_LABELS, checkRecord, fieldLabel, isKnownType, fieldValue, issueCount, referenceHtml, type CiteStyle, type FieldId, type Issue } from '../lib/citeCheck';
+import { CITE_STYLES, EXPECTED, FIELD_LABELS, LEGAL_TYPES, checkRecord, creatorText, fieldExample, fieldLabel, isKnownType, fieldValue, issueCount, referenceHtml, type CiteStyle, type FieldId, type Issue } from '../lib/citeCheck';
 import { SOURCE_INFO, applySuggestions, suggestionsFor, type Suggestion } from '../lib/citeSuggest';
 
 /** Styles Zotero correspondants (répertoire officiel des styles CSL). */
@@ -370,7 +370,11 @@ function FicheLive({
 
   const fields = [...new Set<FieldId>([...(EXPECTED[r.itemType] ?? ['title', 'date']), ...issues.map((i) => i.field)])];
   const toFix = fields.filter((f) => issues.some((i) => i.field === f) || suggestions.some((s) => s.field === f));
-  const editable = toFix.filter((f) => canEdit(r, f));
+  // Volume qui est peut-être une édition : on propose aussi la case « Édition ».
+  const withEdition = issues.some((i) => i.field === 'volume' && i.kind === 'conseil') ? [...toFix, 'edition' as FieldId] : toFix;
+  const editable = withEdition.filter((f) => canEdit(r, f));
+  const isPeople = (f: FieldId) => f === 'creators' || f === 'editors';
+  const peopleOf = (f: FieldId) => r.creators.filter((c) => (c.creatorType ?? 'author') === (f === 'creators' ? 'author' : 'editor'));
   const typeIssue = issues.find((i) => i.field === 'itemType');
   const [edits, setEdits] = useState<Partial<Record<FieldId, Edit>>>({});
   const [touched, setTouched] = useState<FieldId[]>([]);
@@ -378,7 +382,13 @@ function FicheLive({
   const values: Partial<Record<FieldId, Edit>> = {};
   for (const f of editable) {
     const s = suggestions.find((x) => x.field === f && x.value);
-    values[f] = touched.includes(f) ? edits[f]! : s ? { value: s.value, creators: s.creators } : { value: editValue(r, f) };
+    values[f] = touched.includes(f)
+      ? edits[f]!
+      : s
+        ? { value: s.value, creators: s.creators }
+        : isPeople(f)
+          ? { value: editValue(r, f), creators: peopleOf(f) }
+          : { value: editValue(r, f) };
   }
   const { changed } = buildPatch(r, values);
   const after = applySuggestions(r, values);
@@ -422,6 +432,12 @@ function FicheLive({
           </button>
         </div>
       )}
+      {LEGAL_TYPES.includes(r.itemType) && (
+        <div className="notice small">
+          ⚖️ Pour les lois et projets de loi, Biblikube suit le guide de l’UQAM, inspiré du <em>Manuel canadien de la référence juridique</em> (et non
+          l’APA) : numéro, titre, année, session et législature, lien.
+        </div>
+      )}
       {!isKnownType(r.itemType) && (
         <div className="notice small">
           ℹ️ Biblikube ne connaît pas encore les règles de l’APA pour le type « {itemTypeLabel(r.itemType)} » : il vérifie seulement le titre et la
@@ -450,9 +466,33 @@ function FicheLive({
               </div>
             )}
             {editable.map((f) => {
-              const s: Suggestion | undefined = suggestions.find((x) => x.field === f && x.value);
+              const s: Suggestion | undefined = suggestions.find((x) => x.field === f && (x.value || x.choices));
               const src = s ? SOURCE_INFO[s.source] : null;
               const v = values[f]?.value ?? '';
+              const set = (e: Edit) => {
+                setEdits({ ...edits, [f]: e });
+                if (!touched.includes(f)) setTouched([...touched, f]);
+              };
+              if (isPeople(f))
+                return (
+                  <div key={f} className="fiche-edit">
+                    <span className="row small" style={{ gap: '0.35rem', flexWrap: 'wrap' }}>
+                      <strong>{fieldLabel(r.itemType, f)}</strong>
+                      {src && !touched.includes(f) && (
+                        <span className={`src ${src.kind}`} title={src.label}>
+                          {src.icon} {src.label}
+                        </span>
+                      )}
+                    </span>
+                    <PeopleEditor
+                      people={values[f]?.creators ?? []}
+                      creatorType={f === 'creators' ? 'author' : 'editor'}
+                      onChange={(cs) => set({ value: cs.map(creatorText).join(' ; '), creators: cs })}
+                    />
+                    {s?.note && !touched.includes(f) && <span className="small muted">{s.note}</span>}
+                    {editValue(r, f) && v !== editValue(r, f) && <span className="small muted">Actuellement : {editValue(r, f)}</span>}
+                  </div>
+                );
               return (
                 <label key={f} className="fiche-edit">
                   <span className="row small" style={{ gap: '0.35rem', flexWrap: 'wrap' }}>
@@ -466,12 +506,18 @@ function FicheLive({
                   <input
                     type={f === 'accessDate' ? 'date' : 'text'}
                     value={v}
-                    placeholder={f === 'creators' || f === 'editors' ? 'Nom, Prénom ; Nom, Prénom (organisme : sans virgule)' : 'À remplir'}
-                    onChange={(e) => {
-                      setEdits({ ...edits, [f]: { value: e.target.value } });
-                      if (!touched.includes(f)) setTouched([...touched, f]);
-                    }}
+                    placeholder={fieldExample(r.itemType, f) ?? 'À remplir'}
+                    onChange={(e) => set({ value: e.target.value })}
                   />
+                  {s?.choices && (
+                    <span className="row small" style={{ gap: '0.3rem', flexWrap: 'wrap' }}>
+                      {s.choices.map((c) => (
+                        <button key={c} type="button" className={`btn small ${v === c ? 'dark' : ''}`} onClick={() => set({ value: c })}>
+                          {c}
+                        </button>
+                      ))}
+                    </span>
+                  )}
                   {s?.note && !touched.includes(f) && <span className="small muted">{s.note}</span>}
                   {editValue(r, f) && v !== editValue(r, f) && <span className="small muted">Actuellement : {editValue(r, f)}</span>}
                 </label>
@@ -518,6 +564,46 @@ function FicheLive({
         </button>
       </div>
     </section>
+  );
+}
+
+/** Personnes (auteurs, directeurs) : nom et prénom séparés, comme dans Zotero. */
+function PeopleEditor({ people, creatorType, onChange }: { people: Creator[]; creatorType: string; onChange: (cs: Creator[]) => void }) {
+  const setAt = (i: number, c: Creator) => onChange(people.map((p, j) => (j === i ? c : p)));
+  return (
+    <div className="people-edit">
+      {people.map((p, i) => {
+        const org = p.name !== undefined && !p.lastName;
+        return (
+          <div key={i} className="people-row">
+            {org ? (
+              <input value={p.name ?? ''} placeholder="Nom de l’organisme" onChange={(e) => setAt(i, { name: e.target.value, creatorType })} />
+            ) : (
+              <>
+                <input value={p.lastName ?? ''} placeholder="Nom" onChange={(e) => setAt(i, { ...p, lastName: e.target.value, creatorType })} />
+                <input value={p.firstName ?? ''} placeholder="Prénom" onChange={(e) => setAt(i, { ...p, firstName: e.target.value, creatorType })} />
+              </>
+            )}
+            <label className="small row" style={{ gap: '0.2rem' }} title="Un organisme s’écrit en un seul champ">
+              <input
+                type="checkbox"
+                checked={org}
+                onChange={(e) =>
+                  setAt(i, e.target.checked ? { name: [p.firstName, p.lastName].filter(Boolean).join(' '), creatorType } : { lastName: p.name ?? '', firstName: '', creatorType })
+                }
+              />
+              organisme
+            </label>
+            <button type="button" className="btn small" title="Retirer" onClick={() => onChange(people.filter((_, j) => j !== i))}>
+              ×
+            </button>
+          </div>
+        );
+      })}
+      <button type="button" className="btn small" style={{ alignSelf: 'flex-start' }} onClick={() => onChange([...people, { lastName: '', firstName: '', creatorType }])}>
+        + Ajouter une personne
+      </button>
+    </div>
   );
 }
 

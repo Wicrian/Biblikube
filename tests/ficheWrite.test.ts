@@ -58,3 +58,15 @@ describe('propositions', () => {
     ]);
   });
 });
+
+describe('titre du livre venant de Crossref', () => {
+  it('toujours « à vérifier », et au choix s’il y a plusieurs titres', () => {
+    const r = { ...rec({}), itemType: 'bookSection', publication: '', bookTitle: undefined };
+    const issues = checkRecord(r, 'uqam');
+    const one = crossrefSuggestions(r, { DOI: '10.1/x', 'container-title': ['Politiques et interventions sociales'] }, issues, 'crossref');
+    expect(one.find((s) => s.field === 'bookTitle')?.source).toBe('crossref-book');
+    const two = crossrefSuggestions(r, { DOI: '10.1/x', 'container-title': ['Politiques et interventions sociales', 'Développement du pouvoir d’agir'] }, issues, 'crossref');
+    const b = two.find((s) => s.field === 'bookTitle')!;
+    expect([b.value, b.choices?.length]).toEqual(['', 2]);
+  });
+});
