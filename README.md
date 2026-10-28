@@ -182,6 +182,11 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.6.1 — octobre 2026**
+- Barre de gauche plus légère : les groupes (Préparer, Trier, Organiser, Résultats) s’ouvrent et se ferment d’un clic,
+  avec un petit compteur quand ils sont fermés. Au départ, les groupes ouverts dépendent du parcours choisi ; ensuite,
+  Biblikube garde vos choix pour chaque revue. Mes revues, Style et Zotero tiennent sur une ligne en bas.
+
 **0.6 — octobre 2026**
 - **Transférer une revue vers une autre bibliothèque** (écran Identification) : pour reprendre son travail sur les mêmes
   références rangées ailleurs (par exemple la bibliothèque de groupe partagée avec sa direction). Biblikube associe les
