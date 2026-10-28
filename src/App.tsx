@@ -150,6 +150,15 @@ const VIEWS: Record<View, { label: string; title: string; subtitle: string; icon
   prisma: { label: 'PRISMA', title: 'Diagramme PRISMA 2020', subtitle: 'Calculé automatiquement à partir de vos décisions', icon: <GitFork /> },
 };
 
+/** Groupes ouverts au départ, selon le parcours choisi au démarrage (sans parcours : tous). */
+const OPEN_BY_MODE: Record<string, string[]> = {
+  organise: ['Trier', 'Organiser'],
+  sort: ['Trier', 'Organiser'],
+  systematic: ['Préparer', 'Trier', 'Organiser'],
+};
+
+const defaultGroups = (mode?: string) => Object.fromEntries(GROUPS.map((g) => [g.label, OPEN_BY_MODE[mode ?? '']?.includes(g.label) ?? true]));
+
 /** Les étapes regroupées en grandes familles, comme sur la page d'accueil. */
 const GROUPS: { label: string; views: View[] }[] = [
   { label: 'Préparer', views: ['protocol', 'search'] },
@@ -165,14 +174,41 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
     project.mode ? (hasRecords ? (project.mode === 'organise' ? 'organisation' : 'screening') : 'import') : hasRecords ? 'screening' : project.library ? 'import' : 'protocol',
   );
   const [pulse, setPulse] = useState<View | null>(null);
-  // Groupes de la barre ouverts à la main (gardés pour cette revue, dans ce navigateur).
+  // Groupes ouverts dans la barre : au départ selon le parcours choisi, puis comme la personne les laisse
+  // (gardé pour cette revue, dans ce navigateur).
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     try {
-      return JSON.parse(localStorage.getItem(`litflow.railOpen.${project.id}`) ?? '{}');
+      const saved = localStorage.getItem(`litflow.railOpen.${project.id}`);
+      if (saved) return JSON.parse(saved);
     } catch {
-      return {};
+      /* rien */
     }
+    return defaultGroups(project.mode);
   });
+  // Parcours choisi au démarrage (après la création de la revue) : on part de ses groupes, tant que rien n'a été changé à la main.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`litflow.railOpen.${project.id}`)) return;
+    } catch {
+      /* rien */
+    }
+    setOpenGroups(defaultGroups(project.mode));
+  }, [project.mode, project.id]);
+  // En arrivant sur une étape (clic, guide…), son groupe s'ouvre ; on peut ensuite le refermer.
+  useEffect(() => {
+    const label = GROUPS.find((g) => g.views.includes(view))?.label;
+    if (!label) return;
+    setOpenGroups((cur) => {
+      if (cur[label]) return cur;
+      const next = { ...cur, [label]: true };
+      try {
+        localStorage.setItem(`litflow.railOpen.${project.id}`, JSON.stringify(next));
+      } catch {
+        /* rien */
+      }
+      return next;
+    });
+  }, [view, project.id]);
   // Chronométrés : le tri titre-résumé (tant qu'il reste des articles à trier) et l'organisation.
   const measured = view === 'organisation' || (view === 'screening' && screeningKeys(project).some((k) => !project.screening[k]));
   const timeLog = useTimeTracker(view, measured);
@@ -241,11 +277,10 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
   const v = VIEWS[view];
   // Barre de gauche : le groupe de l'étape en cours est toujours ouvert ; les autres s'ouvrent d'un clic.
   const groupOf = (id: View) => GROUPS.find((g) => g.views.includes(id))?.label;
-  const groupSummary = (views: View[]) => views.map((id) => (id === 'screening' || id === 'fulltext' || id === 'organisation' ? counts[id] : undefined)).find(Boolean);
-  const isOpen = (label: string) => label === groupOf(view) || !!openGroups[label];
-  const toggleGroup = (label: string) => {
-    if (label === groupOf(view)) return;
-    const next = { ...openGroups, [label]: !openGroups[label] };
+  const groupSummary = (views: View[]) =>
+    views.map((id) => (id === 'screening' || id === 'fulltext' || id === 'organisation' ? counts[id] : undefined)).find((c) => c && !c.endsWith('/0'));
+  const isOpen = (label: string) => !!openGroups[label];
+  const saveGroups = (next: Record<string, boolean>) => {
     setOpenGroups(next);
     try {
       localStorage.setItem(`litflow.railOpen.${project.id}`, JSON.stringify(next));
@@ -253,6 +288,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
       /* rien */
     }
   };
+  const toggleGroup = (label: string) => saveGroups({ ...openGroups, [label]: !openGroups[label] });
   return (
     <Frame
       onLogo={onHome}
@@ -266,7 +302,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
                 <button
                   className="rail-group-label rail-group-toggle"
                   onClick={() => toggleGroup(g.label)}
-                  title={g.label === groupOf(view) ? 'Étape en cours' : isOpen(g.label) ? 'Replier' : 'Déplier'}
+                  title={isOpen(g.label) ? 'Replier' : 'Déplier'}
                   aria-expanded={isOpen(g.label)}
                 >
                   {isOpen(g.label) ? '▾' : '▸'} {g.label}
