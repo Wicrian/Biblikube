@@ -182,6 +182,16 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.7 — octobre 2026**
+- **Vos marqueurs Zotero dans Biblikube** : sous « Classer » (tri, texte intégral, fiche ouverte de l’Organisation), on
+  coche ou décoche ses marqueurs Zotero, on en ajoute ; chaque clic est écrit dans Zotero, avec les couleurs Zotero.
+  Filtre « Marqueur Zotero » (marqueur ou famille) dans le tri et l’organisation.
+- Nouvel écran **Marqueurs** (en essai) : variantes repérées (majuscules, accents, tirets, pluriels…), fusion limitée aux
+  références de la revue avec historique et « Défusionner », familles de marqueurs (avec option : écrire le marqueur
+  parent dans Zotero), couleurs enregistrées dans Zotero.
+- Les marqueurs créés dans Biblikube s’écrivent « LF:Important » (au lieu de « LF:marqueur:Important »), seulement sur
+  les fiches où ils sont utilisés ; conversion automatique. « Enlever LF: » en fait des marqueurs Zotero ordinaires.
+
 **0.6.1 — octobre 2026**
 - Barre de gauche plus légère : les groupes (Préparer, Trier, Organiser, Résultats) s’ouvrent et se ferment d’un clic,
   avec un petit compteur quand ils sont fermés. Au départ, les groupes ouverts dépendent du parcours choisi ; ensuite,
