@@ -205,6 +205,26 @@ export class ZoteroClient {
     }
   }
 
+  /** Couleurs des marqueurs (réglage de la bibliothèque) ; version 0 s'il n'y en a pas encore. */
+  async tagColors(): Promise<{ colors: { name: string; color: string }[]; version: number }> {
+    try {
+      const res = await this.request(`${this.prefix}/settings/tagColors`);
+      const body = (await res.json()) as { value?: { name: string; color: string }[]; version?: number };
+      return { colors: body.value ?? [], version: body.version ?? Number(res.headers.get('Last-Modified-Version') || 0) };
+    } catch (e) {
+      if (e instanceof ZoteroError && e.status === 404) return { colors: [], version: 0 };
+      throw e;
+    }
+  }
+
+  async setTagColors(colors: { name: string; color: string }[], version: number): Promise<void> {
+    await this.request(`${this.prefix}/settings/tagColors`, {
+      method: 'PUT',
+      headers: { 'If-Unmodified-Since-Version': String(version) },
+      body: JSON.stringify({ value: colors }),
+    });
+  }
+
   children(itemKey: string): Promise<ZItem[]> {
     return this.all<ZItem>(`${this.prefix}/items/${itemKey}/children?format=json`);
   }

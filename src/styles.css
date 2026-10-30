@@ -806,3 +806,26 @@ mark.dup-diff { padding: 0 0.3rem; border-radius: 4px; box-shadow: none; }
   .rail-group-toggle { display: none; }
   .rail-tools { width: auto; flex-shrink: 0; }
 }
+
+/* Marqueurs Zotero de la personne */
+.tag-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.45rem 0; }
+.tag-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.1rem 0.55rem; border-radius: 999px; border: 1px solid var(--panel-border); background: var(--panel-strong); font-size: 0.8rem; color: var(--text); }
+.tag-chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.tag-chip.more { color: var(--muted); }
+.tag-chips.small { margin: 0.25rem 0 0; gap: 0.2rem; }
+.tag-chips.small .tag-chip { font-size: 0.7rem; padding: 0 0.4rem; }
+.variant-card { display: grid; gap: 0.45rem; padding: 0.7rem 0.85rem; border-radius: 14px; background: var(--panel-strong); }
+.tag-chip.pick { cursor: pointer; }
+.tag-chip.pick input { display: none; }
+.tag-chip.pick.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.family-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.55rem 0.7rem; border-radius: 12px; background: var(--panel-strong); }
+.chip-x { border: 0; background: none; cursor: pointer; padding: 0 0 0 0.15rem; color: var(--muted); font-size: 0.85rem; line-height: 1; }
+.tag-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; padding: 0.55rem 0.7rem; border-radius: 12px; background: var(--accent-soft); }
+.tag-actions input { min-width: 12rem; }
+.tag-table tr.on td { background: var(--accent-soft); }
+.color-dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px dashed var(--panel-border); cursor: pointer; padding: 0; }
+.palette { display: grid; grid-template-columns: repeat(5, 22px); gap: 6px; padding: 8px; margin-top: 6px; border-radius: 12px; background: var(--panel-strong); box-shadow: var(--shadow); width: max-content; }
+.palette button { width: 22px; height: 22px; border-radius: 50%; border: 0; cursor: pointer; }
+.palette button.none { background: var(--panel-strong); color: var(--muted); }
+.history-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; border-radius: 10px; background: var(--panel-strong); }
+.history-row.undone { opacity: 0.6; }

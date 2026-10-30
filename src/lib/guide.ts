@@ -2,7 +2,7 @@
 
 import type { Project, ReviewMode } from '../types';
 
-export type ViewId = 'protocol' | 'search' | 'import' | 'dedup' | 'screening' | 'fulltext' | 'organisation' | 'fiches' | 'records' | 'prisma';
+export type ViewId = 'protocol' | 'search' | 'import' | 'dedup' | 'screening' | 'fulltext' | 'organisation' | 'marqueurs' | 'fiches' | 'records' | 'prisma';
 
 export const MODES: { id: ReviewMode; emoji: string; title: string; hint: string; includes: ('Ranger' | 'Trier' | 'PRISMA')[] }[] = [
   { id: 'organise', emoji: '🗂️', title: 'Organiser mes lectures', hint: 'Classer mes articles par section, concept ou thème', includes: ['Ranger'] },
@@ -17,9 +17,9 @@ export const MODES: { id: ReviewMode; emoji: string; title: string; hint: string
 ];
 
 const VIEWS_BY_MODE: Record<ReviewMode, ViewId[]> = {
-  organise: ['import', 'dedup', 'organisation', 'fiches', 'records'],
-  sort: ['import', 'dedup', 'screening', 'fulltext', 'organisation', 'fiches', 'records'],
-  systematic: ['protocol', 'search', 'import', 'dedup', 'screening', 'fulltext', 'organisation', 'fiches', 'records', 'prisma'],
+  organise: ['import', 'dedup', 'organisation', 'marqueurs', 'fiches', 'records'],
+  sort: ['import', 'dedup', 'screening', 'fulltext', 'organisation', 'marqueurs', 'fiches', 'records'],
+  systematic: ['protocol', 'search', 'import', 'dedup', 'screening', 'fulltext', 'organisation', 'marqueurs', 'fiches', 'records', 'prisma'],
 };
 
 /** Étapes affichées dans la barre de gauche. */

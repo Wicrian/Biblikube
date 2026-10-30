@@ -57,6 +57,26 @@ export interface RecordItem {
   edition?: string;
 }
 
+/** Famille de marqueurs (« marqueur parent »), gardée dans Biblikube. */
+export interface TagFamily {
+  id: string;
+  name: string;
+  children: string[];
+}
+
+/** Changement de marqueurs fait par Biblikube dans Zotero, avec de quoi le défaire. */
+export interface TagOp {
+  id: string;
+  at: string;
+  kind: 'merge' | 'parent';
+  /** Marqueur gardé (fusion) ou parent ajouté. */
+  target: string;
+  sources: string[];
+  /** Fiche -> marqueurs concernés qu'elle avait avant. */
+  items: Record<string, { had: string[] }>;
+  undoneAt?: string;
+}
+
 export interface StageDecision {
   decision: Decision;
   reasons: string[];
@@ -253,6 +273,8 @@ export interface Project {
   reportComment?: string;
   /** Séances de travail mesurées dans l'application (minuterie). */
   timeLog?: TimeSession[];
+  /** Marqueurs Zotero de la personne : familles (dans Biblikube) et historique des fusions. */
+  tagWork?: { families: TagFamily[]; history: TagOp[]; ignoredVariants?: string[] };
   /** Labels importés de Rayyan (clé item -> labels), écrits dans Zotero en LF:rayyan:… */
   rayyanLabels: Record<string, string[]>;
   /** Raisons mémorisées, réutilisables d'un clic. */

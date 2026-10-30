@@ -1,5 +1,6 @@
 import type { Project, RecordItem } from '../types';
 import { normalizeForCompare } from './text';
+import { hasTagOrFamily, userTags } from './tags';
 
 export type StatusFilter = 'all' | 'undecided' | 'include' | 'exclude' | 'maybe' | 'notretrieved';
 
@@ -63,6 +64,7 @@ export function applyFilters(p: Project, records: RecordItem[], f: Filters): Rec
   const num = (s: string) => (s.trim() === '' ? null : Number(s));
   const [yMin, yMax, pMin, pMax] = [num(f.yearMin), num(f.yearMax), num(f.pagesMin), num(f.pagesMax)];
   const tag = normalizeForCompare(f.tag);
+  const exactTag = !!f.tag && (f.tag.startsWith('famille:') || Object.values(p.records).some((x) => userTags(p, x).includes(f.tag)));
   return records.filter((r) => {
     if (f.types.length && !f.types.includes(r.itemType)) return false;
     if (f.languages.length && !f.languages.includes(langCode(r.language) || '?')) return false;
@@ -73,7 +75,10 @@ export function applyFilters(p: Project, records: RecordItem[], f: Filters): Rec
     if (f.abstract === 'no' && r.abstract) return false;
     if (pMin !== null && (r.pageCount ?? -Infinity) < pMin) return false;
     if (pMax !== null && (r.pageCount ?? Infinity) > pMax) return false;
-    if (tag && !r.zoteroTags.some((t) => normalizeForCompare(t).includes(tag))) return false;
+    if (f.tag) {
+      // Un marqueur précis ou une famille (liste) ; sinon, texte libre (anciens filtres).
+      if (exactTag ? !hasTagOrFamily(p, r, f.tag) : !r.zoteroTags.some((t) => normalizeForCompare(t).includes(tag))) return false;
+    }
     if (f.categories?.length) {
       const mine = p.organisation.assignments[r.key] ?? [];
       if (!f.categories.some((c) => (c === '__none' ? !mine.length : mine.includes(c)))) return false;

@@ -3,6 +3,7 @@ import { facetValues, type Filters, type StatusFilter } from '../lib/filters';
 import { itemTypeLabel } from '../zotero/mapping';
 import { useProject } from '../store';
 import { orderedCategories } from '../lib/organisation';
+import { TagSelect } from './TagSelect';
 
 const LANG: Record<string, string> = { fr: 'Français', en: 'Anglais', es: 'Espagnol', de: 'Allemand', pt: 'Portugais', it: 'Italien', '?': 'Non précisée' };
 const STATUS: [StatusFilter, string][] = [
@@ -105,8 +106,8 @@ export function FilterBar({ records, filters: f, onChange, status = [] }: Props)
         </select>
       </label>
       <label className="field">
-        <span>Étiquette Zotero</span>
-        <input type="text" value={f.tag} onChange={(e) => set({ tag: e.target.value })} />
+        <span>Marqueur Zotero</span>
+        <TagSelect value={f.tag} onChange={(tag) => set({ tag })} />
       </label>
     </div>
   );

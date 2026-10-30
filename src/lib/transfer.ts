@@ -141,6 +141,8 @@ export function transferProject(p: Project, t: TransferTarget, pairs: Record<str
     fulltext: remapKeys(p.fulltext, pairs),
     notRetrieved: remapKeys(p.notRetrieved, pairs),
     rayyanLabels: remapKeys(p.rayyanLabels, pairs),
+    // Les familles de marqueurs suivent ; l'historique des fusions concerne les anciennes fiches.
+    tagWork: p.tagWork ? { families: p.tagWork.families, history: [] } : undefined,
     ai: { ...p.ai, suggestions: remapKeys(p.ai.suggestions, pairs) },
     // Le classement est recréé dans la nouvelle bibliothèque (collection « Biblikube – … »).
     organisation: {

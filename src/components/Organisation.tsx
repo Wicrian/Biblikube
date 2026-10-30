@@ -26,6 +26,9 @@ import { ClassifyPanel } from './ClassifyPanel';
 import { CircleView } from './CircleView';
 import { NS } from '../lib/env';
 import { ZoteroNotes } from './ZoteroNotes';
+import { TagChips } from './TagChips';
+import { TagSelect } from './TagSelect';
+import { hasTagOrFamily } from '../lib/tags';
 import { Portal } from './Portal';
 
 type Scope = 'review' | 'screening' | 'all' | 'excluded';
@@ -214,6 +217,7 @@ function Board() {
   // arrivée au texte intégral s'ouvre sur les références incluses.
   const [scope, setScope] = useState<Scope>(() => (Object.values(p.fulltext).some((d) => d.decision === 'include') ? 'review' : 'all'));
   const [markerFilter, setMarkerFilter] = useState<string[]>([]);
+  const [tagFilter, setTagFilter] = useState('');
   const [view, setViewState] = useState<'circle' | 'columns'>(() => {
     try {
       return localStorage.getItem(`${NS}.orgView`) === 'columns' ? 'columns' : 'circle';
@@ -269,9 +273,10 @@ function Board() {
       if (scope === 'excluded' && s !== 'exclude' && p.fulltext[r.key]?.decision !== 'exclude') return false;
       if (markerFilter.length && !markerFilter.every((m) => (o.markerAssignments[r.key] ?? []).includes(m))) return false;
       if (nq && !normalizeForCompare(`${r.title} ${authorsShort(r.creators)}`).includes(nq)) return false;
+      if (tagFilter && !hasTagOrFamily(p, r, tagFilter)) return false;
       return true;
     });
-  }, [p, scope, markerFilter, q, o.markerAssignments]);
+  }, [p, scope, markerFilter, q, o.markerAssignments, tagFilter]);
 
   const cats = orderedCategories(o);
   const columns: { id: string; cat: Category | null; items: RecordItem[] }[] = [
@@ -424,6 +429,10 @@ function Board() {
           </div>
         )}
         <MarkerBar selected={markerFilter} onToggle={(id) => setMarkerFilter((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]))} />
+        <label className="small" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', alignSelf: 'flex-start' }}>
+          <span className="muted">Marqueur Zotero :</span>
+          <TagSelect value={tagFilter} onChange={setTagFilter} compact />
+        </label>
         {view === 'columns' && (
           <div className="small muted">
             Glissez une carte vers une colonne pour la classer (maintenez <kbd>Alt</kbd> pour la copier dans une 2e catégorie).
@@ -566,6 +575,7 @@ function BoardCard({
       <div className="small muted">
         {authorsShort(r.creators, 2)} · {r.year ?? 's.d.'}
       </div>
+      <TagChips r={r} max={4} small />
       <div className="row" style={{ gap: '0.25rem', marginTop: '0.3rem' }}>
         {f ? <span className={`badge ${f}`}>{f === 'include' ? 'Revue' : f === 'exclude' ? 'Exclue (texte)' : 'Incertaine'}</span> : s ? <span className={`badge ${s}`}>{s === 'include' ? 'Tri : inclue' : s === 'exclude' ? 'Tri : exclue' : 'Tri : ?'}</span> : null}
         {markers.map((m) => (
@@ -640,6 +650,7 @@ function ClassifyDialog({ recordKey, onClose }: { recordKey: string; onClose: ()
         <div className="small muted">
           {authorsShort(r.creators, 4)} · {r.year ?? 's.d.'} {r.publication && <>· {r.publication}</>}
         </div>
+        <TagChips r={r} />
         <ZoteroNotes recordKey={recordKey} defaultOpen />
         <ClassifyPanel recordKey={recordKey} always />
         <div className="row">

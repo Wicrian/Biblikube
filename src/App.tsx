@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ClipboardList, Compass, Copy, FileCheck, FileText, GitFork, Home as HomeIcon, Layers, LayoutGrid, Library, Minus, Palette, Plus, RefreshCw, Search, Settings as SettingsIcon, Table2 } from 'lucide-react';
+import { ClipboardList, Compass, Copy, FileCheck, Tags, FileText, GitFork, Home as HomeIcon, Layers, LayoutGrid, Library, Minus, Palette, Plus, RefreshCw, Search, Settings as SettingsIcon, Table2 } from 'lucide-react';
 import type { Project, Settings } from './types';
 import { deleteProject, listProjects, loadSettings, saveProject, saveSettings } from './lib/storage';
 import { ProjectProvider, useProject } from './store';
@@ -21,6 +21,7 @@ import { firstView, visibleViews, type ViewId } from './lib/guide';
 import { Onboarding } from './components/Onboarding';
 import { Guide } from './components/Guide';
 import { Fiches } from './components/Fiches';
+import { Marqueurs } from './components/Marqueurs';
 import { SessionsDialog, TimePill, useTimeTracker } from './components/TimeTracker';
 import { QuestionLine } from './components/QuestionLine';
 
@@ -145,6 +146,7 @@ const VIEWS: Record<View, { label: string; title: string; subtitle: string; icon
   screening: { label: 'Tri', title: 'Tri titre-résumé', subtitle: 'Glissez : à droite inclure, à gauche exclure, en haut incertain', icon: <Layers /> },
   fulltext: { label: 'Texte intégral', title: 'Texte intégral', subtitle: 'Lisez dans Zotero, décidez ici ou par étiquettes', icon: <FileText /> },
   organisation: { label: 'Organisation', title: 'Organisation', subtitle: 'Votre propre classement — seul ou combiné à la revue systématique', icon: <LayoutGrid /> },
+  marqueurs: { label: 'Marqueurs', title: 'Marqueurs Zotero', subtitle: 'Vos marqueurs : variantes, fusions, familles et couleurs', icon: <Tags />, badge: 'test' },
   fiches: { label: 'Fiches', title: 'Fiches Zotero', subtitle: 'Vérifier que vos références sont complètes selon la norme choisie', icon: <FileCheck />, badge: 'test' },
   records: { label: 'Références', title: 'Références', subtitle: 'Toutes vos références, filtrables et exportables', icon: <Table2 /> },
   prisma: { label: 'PRISMA', title: 'Diagramme PRISMA 2020', subtitle: 'Calculé automatiquement à partir de vos décisions', icon: <GitFork /> },
@@ -163,7 +165,7 @@ const defaultGroups = (mode?: string) => Object.fromEntries(GROUPS.map((g) => [g
 const GROUPS: { label: string; views: View[] }[] = [
   { label: 'Préparer', views: ['protocol', 'search'] },
   { label: 'Trier', views: ['import', 'dedup', 'screening', 'fulltext'] },
-  { label: 'Organiser', views: ['organisation', 'fiches'] },
+  { label: 'Organiser', views: ['organisation', 'marqueurs', 'fiches'] },
   { label: 'Résultats', views: ['records', 'prisma'] },
 ];
 
@@ -398,6 +400,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
         {view === 'search' && <SearchStrategy />}
         {view === 'import' && <ImportView onSettings={onSettings} onDone={() => setView('dedup')} />}
         {view === 'fiches' && <Fiches />}
+        {view === 'marqueurs' && <Marqueurs />}
         {view === 'dedup' && <Dedup onDone={() => setView(project.mode === 'organise' ? 'organisation' : 'screening')} />}
         {view === 'screening' && <Review stage="screening" />}
         {view === 'fulltext' && <Review stage="fulltext" />}
