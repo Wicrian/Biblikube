@@ -179,13 +179,18 @@ export function newProject(name: string): Project {
     askReason: { include: true, exclude: true, maybe: true },
     manualCounts: { automationExcluded: 0, otherRemoved: 0, otherMethodsIdentified: [] },
     ai: { enabled: false, show: 'before', learn: true, dupThreshold: 0.93, suggestions: {}, lastRun: null },
-    sync: { auto: true, tagPrefix: 'LF', writeNotes: true, pending: [], lastSync: null, lastError: null, libraryVersion: null, sourceMap: {}, lastPull: null, snapshotKeys: [], snapshotHash: null, lastSnapshot: null },
+    sync: { auto: true, tagPrefix: 'LF', writeNotes: true, pending: [], lastSync: null, lastError: null, libraryVersion: null, sourceMap: {}, lastPull: null, snapshotKeys: [], snapshotHash: null, lastSnapshot: null, markerTags: 2 },
   };
 }
 
 /** Complète un projet enregistré par une version plus ancienne de l'application. */
 export function upgradeProject(p: Project): Project {
   const base = newProject(p.name);
+  // Marqueurs : passage de « LF:marqueur:Important » à « LF:Important » (réécrit à la prochaine synchronisation).
+  if ((p.sync?.markerTags ?? 1) < 2 && p.organisation) {
+    const keys = Object.entries(p.organisation.markerAssignments ?? {}).filter(([, v]) => v.length).map(([k]) => k);
+    p = { ...p, sync: { ...p.sync, markerTags: 2, pending: [...new Set([...(p.sync.pending ?? []), ...(p.library ? keys : [])])] } };
+  }
   return {
     ...base,
     ...p,

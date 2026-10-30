@@ -99,7 +99,7 @@ function OrganisationSetup() {
               <strong>Catégories</strong> → des sous-collections Zotero, dans « Biblikube – {p.name} › 4 – Organisation · … ».
             </li>
             <li>
-              <strong>Marqueurs</strong> (⭐ Important, 📌 À citer…) → des étiquettes Zotero <code>{p.sync.tagPrefix}:marqueur:…</code>.
+              <strong>Marqueurs</strong> (⭐ Important, 📌 À citer…) → des étiquettes Zotero <code>{p.sync.tagPrefix}:…</code> (ex. <code>{p.sync.tagPrefix}:Important</code>), seulement sur les fiches où vous les utilisez.
             </li>
             <li>Tous vos articles peuvent être classés, triés ou non. Rien n’est jamais supprimé de Zotero.</li>
           </ul>

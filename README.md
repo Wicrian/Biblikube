@@ -123,7 +123,7 @@ question de recherche, gardée pour la méthodologie).
 
 - **Catégories** (2 niveaux) → sous-collections Zotero dans `Biblikube – projet › 4 – Organisation · nom du plan`,
   ou dans une **collection Zotero existante** que Biblikube reprend et continue à développer.
-- **Marqueurs** (⭐ Important, 📌 À citer…) → étiquettes `LF:marqueur:…` ; cliquer sur un marqueur filtre les références.
+- **Marqueurs** (⭐ Important, 📌 À citer…) → étiquettes `LF:…` (ex. `LF:Important`), seulement sur les fiches où ils sont utilisés ; « Enlever LF: » (écran Marqueurs) en fait des marqueurs Zotero ordinaires ; cliquer sur un marqueur filtre les références.
 - **Tri en cercle** : les références à classer en pile au centre, les catégories en bulles autour. Glisser la carte
   (souris ou doigt) vers une bulle la range et fait venir la suivante ; toucher plusieurs bulles puis « Suivante »
   la range dans plusieurs catégories ; une catégorie qui a des sous-catégories ouvre un second cercle. Clavier :
@@ -132,7 +132,7 @@ question de recherche, gardée pour la méthodologie).
   tablette pour la classer ; boutons de classement rapides pendant le tri et le texte intégral ; classement groupé
   depuis l’onglet Références.
 - **Dans les deux sens** : glisser une référence dans une de ces sous-collections dans Zotero, en créer, renommer ou
-  supprimer une, ajouter une étiquette `LF:marqueur:…` : Biblikube le reprend.
+  supprimer une, ajouter une étiquette `LF:…` : Biblikube le reprend.
 - **Supprimer une catégorie** supprime la sous-collection Zotero mais **jamais les références** : Biblikube demande
   s’il faut les remettre « à classer », les déplacer dans une autre catégorie ou leur donner un marqueur.
 

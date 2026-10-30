@@ -6,7 +6,7 @@
 // Supprimer une collection Zotero ne supprime jamais les références qu'elle contient.
 
 import type { Category, Organisation, Project, RecordItem } from '../types';
-import { newCategory, newMarker, MARKER_COLORS, markerTag } from '../lib/organisation';
+import { newCategory, newMarker, MARKER_COLORS, markerNameFromTag, markerTag } from '../lib/organisation';
 import type { ZCollection, ZoteroClient } from './api';
 
 export const organisationRootName = (o: Organisation) => `4 – Organisation · ${o.name}`;
@@ -180,7 +180,7 @@ export function reconcileOrganisation(p: Project, records: RecordItem[], pending
   let o = p.organisation;
   if (!o.name && !o.markers.length) return { org: o, changed: [] };
   const catByKey = new Map(o.categories.filter((c) => c.zoteroKey).map((c) => [c.zoteroKey!, c.id]));
-  const prefix = `${p.sync.tagPrefix.trim() || 'LF'}:marqueur:`;
+  const prefix = p.sync.tagPrefix;
   const changed: string[] = [];
   let markers = o.markers;
   const assignments = { ...o.assignments };
@@ -200,7 +200,7 @@ export function reconcileOrganisation(p: Project, records: RecordItem[], pending
       changed.push(r.key);
     }
     // Marqueurs
-    const zNames = r.zoteroTags.filter((t) => t.startsWith(prefix)).map((t) => t.slice(prefix.length));
+    const zNames = [...new Set(r.zoteroTags.map((t) => markerNameFromTag(prefix, t)).filter((n): n is string => !!n))];
     for (const n of zNames)
       if (!markers.some((m) => m.name === n)) markers = [...markers, newMarker(n, MARKER_COLORS[markers.length % MARKER_COLORS.length])];
     const zMarkers = zNames.map((n) => markers.find((m) => m.name === n)!.id);

@@ -320,6 +320,8 @@ export interface Project {
     snapshotKeys: string[];
     snapshotHash: string | null;
     lastSnapshot: string | null;
+    /** 2 : marqueurs écrits « LF:Important » (avant : « LF:marqueur:Important »). */
+    markerTags?: number;
   };
 }
 

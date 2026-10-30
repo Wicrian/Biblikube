@@ -116,7 +116,7 @@ describe('organisation', () => {
     const b = items.get('B')!.data;
     expect(b.collections).toContain(p.organisation.categories.find((c) => c.id === metho.id)!.zoteroKey);
     expect(b.collections).toContain(p.zoteroCollections.screening_exclude);
-    expect(b.tags!.map((t) => t.tag)).toEqual(expect.arrayContaining(['perso', 'LF:marqueur:⭐ Important', 'LF:tri:exclu']));
+    expect(b.tags!.map((t) => t.tag)).toEqual(expect.arrayContaining(['perso', 'LF:⭐ Important', 'LF:tri:exclu']));
     expect(p.organisation.structureDirty).toBe(false);
 
     // Renommer puis supprimer une catégorie en déplaçant ses références.

@@ -52,3 +52,41 @@ describe('marqueurs Zotero', () => {
     expect(opChange(op, keys[0])).toEqual({ remove: [], add: ['Pair-aidance (famille)'] });
   });
 });
+
+describe('marqueurs créés dans Biblikube', () => {
+  it('s’écrivent « LF:Important » ; l’ancienne forme est encore comprise', async () => {
+    const { markerNameFromTag, markerTag, newMarker } = await import('../src/lib/organisation');
+    const p = demoProject();
+    expect(markerTag(p, newMarker('Important'))).toBe('LF:Important');
+    expect(markerTag(p, newMarker('tri: à revoir'))).toBe('LF:marqueur:tri: à revoir');
+    expect(markerNameFromTag('LF', 'LF:Important')).toBe('Important');
+    expect(markerNameFromTag('LF', 'LF:marqueur:À citer')).toBe('À citer');
+    for (const t of ['LF:tri:inclus', 'LF:texte:exclu', 'LF:doublon', 'LF:tri:raison:Hors sujet', 'LF:rayyan:x', 'Important']) expect(markerNameFromTag('LF', t)).toBeNull();
+  });
+  it('sans « LF: » dans Zotero, le marqueur redevient un marqueur Zotero ordinaire', async () => {
+    const { reconcileOrganisation } = await import('../src/zotero/organisationSync');
+    const { newMarker } = await import('../src/lib/organisation');
+    const p = demoProject();
+    const m = newMarker('Important');
+    const k = Object.keys(p.records)[0];
+    p.organisation = { ...p.organisation, markers: [m], markerAssignments: { [k]: [m.id] } };
+    const r = { ...p.records[k], zoteroTags: ['Important'] };
+    const { org } = reconcileOrganisation(p, [r], new Set());
+    expect(org.markerAssignments[k]).toBeUndefined();
+  });
+});
+
+describe('passage à « LF:Important »', () => {
+  it('les références qui ont un marqueur seront réécrites à la prochaine synchronisation', async () => {
+    const { upgradeProject } = await import('../src/lib/frameworks');
+    const p = demoProject();
+    const k = Object.keys(p.records)[0];
+    p.library = { type: 'user', id: '1', name: 'x' };
+    p.organisation = { ...p.organisation, markers: [{ id: 'm1', name: 'Important', color: '#000' }], markerAssignments: { [k]: ['m1'] } };
+    delete (p.sync as { markerTags?: number }).markerTags;
+    const u = upgradeProject(p);
+    expect(u.sync.pending).toContain(k);
+    expect(u.sync.markerTags).toBe(2);
+    expect(upgradeProject(u).sync.pending.filter((x) => x === k)).toHaveLength(1);
+  });
+});

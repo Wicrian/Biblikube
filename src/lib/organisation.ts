@@ -179,8 +179,26 @@ export function deleteMarker(o: Organisation, id: string): { org: Organisation; 
   return { org: { ...o, markers: o.markers.filter((m) => m.id !== id), markerAssignments }, affected };
 }
 
-/** Étiquette Zotero d'un marqueur. */
-export const markerTag = (p: Project, m: Marker) => `${p.sync.tagPrefix.trim() || 'LF'}:marqueur:${m.name}`;
+// Étiquettes réservées aux décisions de Biblikube (LF:tri:…, LF:doublon…).
+const RESERVED = /^(doublon|note|tri:|texte:|rayyan:|marqueur:)/i;
+
+/**
+ * Étiquette Zotero d'un marqueur créé dans Biblikube : « LF:Important ».
+ * (Un nom qui ressemble à une étiquette de décision garde l'ancienne forme « LF:marqueur:… ».)
+ */
+export const markerTag = (p: Project, m: Marker) => {
+  const pre = p.sync.tagPrefix.trim() || 'LF';
+  return RESERVED.test(m.name) ? `${pre}:marqueur:${m.name}` : `${pre}:${m.name}`;
+};
+
+/** Nom du marqueur porté par une étiquette « LF:Important » (ou l'ancienne « LF:marqueur:Important »), sinon null. */
+export function markerNameFromTag(prefix: string, tag: string): string | null {
+  const pre = `${prefix.trim() || 'LF'}:`;
+  if (!tag.startsWith(pre)) return null;
+  const rest = tag.slice(pre.length);
+  if (rest.toLowerCase().startsWith('marqueur:')) return rest.slice('marqueur:'.length) || null;
+  return RESERVED.test(rest) || !rest.trim() ? null : rest;
+}
 
 /** Clés Zotero des collections gérées par l'organisation (racine, catégories, supprimées). */
 export function organisationCollectionKeys(o: Organisation): string[] {

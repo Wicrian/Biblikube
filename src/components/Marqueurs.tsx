@@ -7,6 +7,7 @@ import type { Project, TagFamily, TagOp } from '../types';
 import type { ZoteroClient } from '../zotero/api';
 import { changeTags, opChange, planMerge, planParent, tagIndex, variantGroups, ZOTERO_COLORS } from '../lib/tags';
 import { useTagColors } from './tagColors';
+import { deleteMarker, markerTag } from '../lib/organisation';
 
 /** Applique (ou défait) une opération sur les fiches Zotero ; renvoie les nouveaux marqueurs de chaque fiche. */
 async function runOp(client: ZoteroClient, p: Project, op: TagOp, undo: boolean) {
@@ -110,10 +111,44 @@ export function Marqueurs() {
     void apply(op);
   };
 
+  /** Marqueur de Biblikube -> marqueur Zotero ordinaire, sur toutes les fiches où il est utilisé. */
+  const detach = async (id: string) => {
+    const m = p.organisation.markers.find((x) => x.id === id);
+    if (!m || !client) return setMessage('Reliez cette revue à Zotero pour modifier les marqueurs.');
+    const keys = Object.keys(p.organisation.markerAssignments).filter((k) => p.organisation.markerAssignments[k].includes(id) && p.records[k]);
+    const pre = p.sync.tagPrefix.trim() || 'LF';
+    if (!confirm(`« ${markerTag(p, m)} » devient le marqueur Zotero « ${m.name} » sur ${keys.length} fiche${keys.length > 1 ? 's' : ''}, et quitte la liste des marqueurs de Biblikube. Continuer ?`)) return;
+    setBusy('Écriture dans Zotero…');
+    setMessage('');
+    try {
+      const after: Record<string, string[]> = {};
+      for (let i = 0; i < keys.length; i += 50) {
+        const items = await client.itemsByKeys(keys.slice(i, i + 50));
+        const writes = items.map((it) => {
+          const tags = changeTags(it.data.tags ?? [], [markerTag(p, m), `${pre}:marqueur:${m.name}`, `${pre}:${m.name}`], [m.name]);
+          after[it.key] = tags.map((t) => t.tag);
+          return { key: it.key, version: it.version, tags };
+        });
+        const res = await client.writeItems(writes);
+        for (const f of Object.values(res.failed)) if (f.key) delete after[f.key];
+      }
+      update((cur) => {
+        const records = { ...cur.records };
+        for (const [k, tags] of Object.entries(after)) if (records[k]) records[k] = { ...records[k], zoteroTags: tags };
+        return { ...cur, records, organisation: deleteMarker(cur.organisation, id).org };
+      });
+      setMessage(`« ${m.name} » est maintenant un marqueur Zotero ordinaire (${Object.keys(after).length} fiche${Object.keys(after).length > 1 ? 's' : ''}).`);
+    } catch (e) {
+      setMessage(`Zotero a refusé la modification : ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusy('');
+    }
+  };
+
   const toggle = (t: string) => setSelected((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
   const familiesOf = (t: string) => work.families.filter((f) => f.children.includes(t) || f.name === t).map((f) => f.name);
 
-  if (!index.size)
+  if (!index.size && !p.organisation.markers.length)
     return (
       <section className="panel">
         <p style={{ margin: 0 }}>
@@ -150,6 +185,34 @@ export function Marqueurs() {
               onIgnore={() => saveWork((w) => ({ ...w, ignoredVariants: [...(w.ignoredVariants ?? []), [...g].sort().join('|')] }))}
             />
           ))}
+        </section>
+      )}
+
+      {p.organisation.markers.length > 0 && (
+        <section className="panel stack">
+          <h2 style={{ margin: 0 }}>Marqueurs créés dans Biblikube</h2>
+          <p className="small muted" style={{ margin: 0 }}>
+            Dans Zotero, ils s’écrivent avec « {p.sync.tagPrefix || 'LF'}: » devant (par exemple « {p.sync.tagPrefix || 'LF'}:Important »), seulement sur les fiches
+            où vous les utilisez. « Enlever {p.sync.tagPrefix || 'LF'}: » en fait un marqueur Zotero ordinaire (vous pouvez aussi le renommer dans Zotero).
+          </p>
+          {p.organisation.markers.map((m) => {
+            const keys = Object.keys(p.organisation.markerAssignments).filter((k) => p.organisation.markerAssignments[k].includes(m.id));
+            return (
+              <div key={m.id} className="family-row">
+                <span className="marker-dot" style={{ background: m.color }} />
+                <strong>{m.name}</strong>
+                <span className="small muted">
+                  {keys.length ? `${keys.length} référence${keys.length > 1 ? 's' : ''} · « ${markerTag(p, m)} » dans Zotero` : 'pas encore utilisé : rien dans Zotero'}
+                </span>
+                <span className="spacer" />
+                {keys.length > 0 && (
+                  <button className="btn small" disabled={!!busy} onClick={() => void detach(m.id)}>
+                    Enlever « {p.sync.tagPrefix || 'LF'}: »
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </section>
       )}
 
