@@ -26,7 +26,6 @@ import { ClassifyPanel } from './ClassifyPanel';
 import { CircleView } from './CircleView';
 import { NS } from '../lib/env';
 import { ZoteroNotes } from './ZoteroNotes';
-import { TagChips } from './TagChips';
 import { TagSelect } from './TagSelect';
 import { hasTagOrFamily } from '../lib/tags';
 import { Portal } from './Portal';
@@ -575,7 +574,6 @@ function BoardCard({
       <div className="small muted">
         {authorsShort(r.creators, 2)} · {r.year ?? 's.d.'}
       </div>
-      <TagChips r={r} max={4} small />
       <div className="row" style={{ gap: '0.25rem', marginTop: '0.3rem' }}>
         {f ? <span className={`badge ${f}`}>{f === 'include' ? 'Revue' : f === 'exclude' ? 'Exclue (texte)' : 'Incertaine'}</span> : s ? <span className={`badge ${s}`}>{s === 'include' ? 'Tri : inclue' : s === 'exclude' ? 'Tri : exclue' : 'Tri : ?'}</span> : null}
         {markers.map((m) => (
@@ -650,7 +648,6 @@ function ClassifyDialog({ recordKey, onClose }: { recordKey: string; onClose: ()
         <div className="small muted">
           {authorsShort(r.creators, 4)} · {r.year ?? 's.d.'} {r.publication && <>· {r.publication}</>}
         </div>
-        <TagChips r={r} />
         <ZoteroNotes recordKey={recordKey} defaultOpen />
         <ClassifyPanel recordKey={recordKey} always />
         <div className="row">

@@ -1,9 +1,7 @@
-// Pastilles des marqueurs Zotero de la personne, avec leurs couleurs Zotero.
+// Couleurs des marqueurs Zotero de la bibliothèque (lues et modifiées dans Zotero).
 import { useEffect, useState } from 'react';
 import { useProject } from '../store';
-import type { RecordItem } from '../types';
 import type { ZoteroClient } from '../zotero/api';
-import { userTags } from '../lib/tags';
 
 type Colors = { list: { name: string; color: string }[]; version: number };
 const cache = new Map<string, Colors>();
@@ -44,27 +42,4 @@ export function useTagColors() {
     listeners.forEach((f) => f());
   };
   return { colors: map, setColor };
-}
-
-export function TagChips({ r, max = 12, small = false }: { r: RecordItem; max?: number; small?: boolean }) {
-  const { project: p } = useProject();
-  const { colors } = useTagColors();
-  const tags = userTags(p, r);
-  if (!tags.length) return null;
-  // Les marqueurs en couleur d'abord, comme dans Zotero.
-  const sorted = [...tags].sort((a, b) => Number(colors.has(b)) - Number(colors.has(a)));
-  return (
-    <span className={`tag-chips ${small ? 'small' : ''}`}>
-      {sorted.slice(0, max).map((t) => {
-        const c = colors.get(t);
-        return (
-          <span key={t} className="tag-chip" style={c ? { background: `${c}22`, borderColor: c } : undefined} title="Marqueur Zotero">
-            {c && <i style={{ background: c }} />}
-            {t}
-          </span>
-        );
-      })}
-      {tags.length > max && <span className="tag-chip more">+{tags.length - max}</span>}
-    </span>
-  );
 }

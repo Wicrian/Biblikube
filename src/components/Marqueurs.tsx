@@ -6,7 +6,7 @@ import { useProject } from '../store';
 import type { Project, TagFamily, TagOp } from '../types';
 import type { ZoteroClient } from '../zotero/api';
 import { changeTags, opChange, planMerge, planParent, tagIndex, variantGroups, ZOTERO_COLORS } from '../lib/tags';
-import { useTagColors } from './TagChips';
+import { useTagColors } from './tagColors';
 
 /** Applique (ou défait) une opération sur les fiches Zotero ; renvoie les nouveaux marqueurs de chaque fiche. */
 async function runOp(client: ZoteroClient, p: Project, op: TagOp, undo: boolean) {

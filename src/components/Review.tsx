@@ -14,7 +14,6 @@ import { AiProgressText, useAiProgress } from './AiProgress';
 import { runSuggestions } from '../ai/run';
 import { cohenKappa, kappaLabel } from '../lib/agreement';
 import { Portal } from './Portal';
-import { TagChips } from './TagChips';
 
 const DECISION_ICON: Record<Decision, ReactNode> = { exclude: <X />, maybe: <HelpCircle />, include: <Check /> };
 
@@ -422,7 +421,6 @@ function RecordCard({
         {r.pageCount && <> · {r.pageCount} p.</>}
         {r.language && <> · {r.language}</>}
       </div>
-      <TagChips r={r} />
       <div className="abstract">
         {r.abstract ? (
           <Highlighted text={r.abstract} include={includeWords} exclude={excludeWords} />

@@ -12,7 +12,6 @@ import { setAssignment, toggleMarker } from '../lib/organisation';
 import { authorsShort } from '../lib/text';
 import { useProject } from '../store';
 import { NotesBadge, ZoteroNotes } from './ZoteroNotes';
-import { TagChips } from './TagChips';
 import { Portal } from './Portal';
 
 type Bubble = { id: string; label: string; cat: Category | null; kind: 'cat' | 'parent-all' | 'back' | 'add'; children: number };
@@ -231,7 +230,6 @@ export function CircleView({ visible, onAddCategory, onColumns }: { visible: Rec
                 <div className="small muted">
                   {authorsShort(cur.creators, 3)} · {cur.year ?? 's.d.'}
                 </div>
-                <TagChips r={cur} max={5} small />
                 {cur.abstract && <div className="stack-abstract small">{cur.abstract}</div>}
                 <div className="row" style={{ gap: '0.25rem', marginTop: 'auto' }}>
                   <NotesBadge recordKey={cur.key} onOpen={() => setNotesFor(cur.key)} />
