@@ -28,6 +28,7 @@ const T = {
     includedStudies: 'Études incluses dans la revue',
     otherIdentified: 'Enregistrements identifiés à partir de :',
     pending: 'en attente de décision',
+    fromMaybe: 'dont {n} incertains au tri',
   },
   en: {
     idHeader: 'Identification of studies via databases and registers',
@@ -51,6 +52,7 @@ const T = {
     includedStudies: 'Studies included in review',
     otherIdentified: 'Records identified from:',
     pending: 'awaiting decision',
+    fromMaybe: 'including {n} uncertain at screening',
   },
 };
 
@@ -108,7 +110,7 @@ function buildLayout(c: PrismaCounts, t: (typeof T)['fr'], showPending: boolean)
   const colBoxes = (col: Column, x: number, xE: number, rows: number[]) => {
     const excl = [t.reportsExcluded, ...col.excludedByReason.map(([r, v]) => wrap(`${r} (n = ${v})`, 34)).flat()];
     return {
-      sought: { x, y: rows[0], w: BOX_W, lines: wrap(`${t.sought}\n${n(col.sought)}`) },
+      sought: { x, y: rows[0], w: BOX_W, lines: wrap(`${t.sought}\n${n(col.sought)}${col === c.main && c.soughtFromMaybe ? `\n(${t.fromMaybe.replace('{n}', String(c.soughtFromMaybe))})` : ''}`) },
       notRetrieved: { x: xE, y: rows[0], w: EXCL_W, lines: wrap(`${t.notRetrieved}\n${n(col.notRetrieved)}`, 34) },
       assessed: { x, y: rows[1], w: BOX_W, lines: wrap(`${t.assessed}\n${n(col.assessed)}${pend(col.pending)}`) },
       excluded: { x: xE, y: rows[1], w: EXCL_W, lines: excl.length > 1 ? excl : [t.reportsExcluded, '(n = 0)'] },
@@ -120,7 +122,7 @@ function buildLayout(c: PrismaCounts, t: (typeof T)['fr'], showPending: boolean)
   const rowH: number[] = [];
   rowH[0] = Math.max(boxHeight(identified), boxHeight(removed), hasOther ? boxHeight(otherLines) : 0);
   rowH[1] = boxHeight(wrap(`${t.screened}\n${n(c.screened)}${pend(c.screeningPending)}`));
-  rowH[2] = boxHeight(wrap(`${t.sought}\n(n)`)) ;
+  rowH[2] = boxHeight(wrap(`${t.sought}\n(n)${c.soughtFromMaybe ? '\n(…)' : ''}`)) ;
   const mainExcl = [t.reportsExcluded, ...c.main.excludedByReason.map(([r, v]) => wrap(`${r} (n = ${v})`, 34)).flat()];
   const otherExcl = c.other ? [t.reportsExcluded, ...c.other.excludedByReason.map(([r, v]) => wrap(`${r} (n = ${v})`, 34)).flat()] : [];
   rowH[3] = Math.max(boxHeight(mainExcl), boxHeight(otherExcl), boxHeight(wrap(`${t.assessed}\n(n)\n[x]`)));
@@ -259,6 +261,19 @@ export function Prisma() {
           Les chiffres sont calculés automatiquement à partir de vos décisions. Le SVG s’ouvre et se modifie dans Inkscape,
           PowerPoint, Word ou draw.io. Modèle : Page MJ, et al. BMJ 2021;372:n71.
         </p>
+        {counts.soughtFromMaybe > 0 && (
+          <p className="small notice" style={{ margin: 0 }}>
+            Réglage « inclus et incertains » : {counts.soughtFromMaybe} référence{counts.soughtFromMaybe > 1 ? 's' : ''} incertaine{counts.soughtFromMaybe > 1 ? 's' : ''} au tri
+            {counts.soughtFromMaybe > 1 ? ' ont' : ' a'} aussi été recherchée{counts.soughtFromMaybe > 1 ? 's' : ''} en texte intégral. C’est permis par PRISMA 2020 : pensez à le
+            préciser dans votre méthode.
+          </p>
+        )}
+        {counts.poolAll && (
+          <p className="small notice" style={{ margin: 0 }}>
+            Réglage « toutes les références » : ce diagramme ne montre que le parcours PRISMA (références incluses au tri). Les évaluations faites
+            sur les autres références n’y figurent pas.
+          </p>
+        )}
         <div className="prisma-wrap">
           <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" width={L.width} height={L.height} viewBox={`0 0 ${L.width} ${L.height}`} fontFamily="Arial, Helvetica, sans-serif" fontSize="12">
             <defs>

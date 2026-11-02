@@ -2,7 +2,8 @@ import { Check, HelpCircle, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Decision, Project, RecordItem, Stage, StageDecision } from '../types';
 import { applyFilters, emptyFilters, sortRecords, type Filters, type SortKey } from '../lib/filters';
-import { fulltextKeys, recordKind, screeningKeys, setAsideDecisions, setAsideNote } from '../lib/prisma';
+import { FULLTEXT_POOLS, fulltextKeys, hiddenFulltextDecisions, recordKind, screeningKeys, setAsideDecisions, setAsideNote } from '../lib/prisma';
+import type { FulltextPool } from '../types';
 import { authorsShort, highlight, splitKeywords } from '../lib/text';
 import { useProject } from '../store';
 import { ZoteroNotes } from './ZoteroNotes';
@@ -40,10 +41,23 @@ export function Review({ stage }: { stage: Stage }) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [aiDisagree, setAiDisagree] = useState(false);
+  // Texte intégral : travailler d'abord les inclus, les incertains… au tri (choix de priorité).
+  const [origin, setOrigin] = useState<'all' | 'include' | 'maybe' | 'exclude' | 'none' | 'other'>('all');
 
   const decisions = p[stage];
   const baseKeys = useMemo(() => (stage === 'screening' ? screeningKeys(p) : fulltextKeys(p)), [stage, p]);
-  const pool = useMemo(() => baseKeys.map((k) => p.records[k]), [baseKeys, p.records]);
+  const originOf = (k: string) => (recordKind(p, p.records[k]) === 'other' ? 'other' : (p.screening[k]?.decision ?? 'none'));
+  const originCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    if (stage === 'fulltext') for (const k of baseKeys) c[originOf(k)] = (c[originOf(k)] ?? 0) + 1;
+    return c;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, baseKeys, p.screening]);
+  const pool = useMemo(
+    () => baseKeys.filter((k) => stage !== 'fulltext' || origin === 'all' || originOf(k) === origin).map((k) => p.records[k]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [baseKeys, p.records, origin, stage],
+  );
   const queue = useMemo(() => {
     let rs = applyFilters(p, pool, filters);
     if (aiDisagree) rs = rs.filter((r) => isAiDisagreement(p, r.key));
@@ -146,6 +160,7 @@ export function Review({ stage }: { stage: Stage }) {
   return (
     <div className="review">
       <div className="stack">
+        {stage === 'fulltext' && <FulltextPoolBar origin={origin} setOrigin={setOrigin} counts={originCounts} total={baseKeys.length} />}
         <div className="panel stack" style={{ padding: '0.9rem 1.1rem' }}>
           <div className="row">
             <div className="seg">
@@ -809,6 +824,97 @@ function AiPanel({ disagreeOnly, onDisagreeOnly }: { disagreeOnly: boolean; onDi
         L’IA compare le sens des textes à vos critères et à vos décisions. Elle se trompe souvent : c’est un deuxième avis,
         pas une décision.
       </div>
+    </div>
+  );
+}
+
+const ORIGIN_LABEL: Record<string, string> = {
+  include: 'Inclus au tri',
+  maybe: 'Incertains au tri',
+  exclude: 'Exclus au tri',
+  none: 'Non triés',
+  other: 'Autres méthodes',
+};
+
+/** Texte intégral : qui y passe (réglage de la revue) et par quoi commencer. */
+function FulltextPoolBar({
+  origin,
+  setOrigin,
+  counts,
+  total,
+}: {
+  origin: string;
+  setOrigin: (o: 'all' | 'include' | 'maybe' | 'exclude' | 'none' | 'other') => void;
+  counts: Record<string, number>;
+  total: number;
+}) {
+  const { project: p, update, markDirty } = useProject();
+  const pool = p.fulltextPool ?? 'include';
+  const hidden = hiddenFulltextDecisions(p);
+  const setPool = (next: FulltextPool) => {
+    if (next === 'all' && p.mode === 'systematic' && !confirm('« Toutes les références » ne correspond pas à un parcours PRISMA : le diagramme ne montrera que les inclus au tri. Continuer ?')) return;
+    const before = new Set(fulltextKeys(p));
+    const after = new Set(fulltextKeys({ ...p, fulltextPool: next }));
+    update((cur) => ({ ...cur, fulltextPool: next }));
+    // Les références qui entrent ou sortent du texte intégral sont réécrites dans Zotero (dossiers « 2 – … », « 3 – … »).
+    markDirty([...before, ...after].filter((k) => before.has(k) !== after.has(k)));
+    setOrigin('all');
+  };
+  const origins = (['include', 'maybe', 'exclude', 'none', 'other'] as const).filter((o) => counts[o]);
+  return (
+    <div className="panel stack" style={{ padding: '0.75rem 1.1rem', gap: '0.5rem' }}>
+      <div className="row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span className="small muted">Au texte intégral :</span>
+        <select style={{ width: 'auto' }} value={pool} onChange={(e) => setPool(e.target.value as FulltextPool)}>
+          {(Object.keys(FULLTEXT_POOLS) as FulltextPool[]).map((k) => (
+            <option key={k} value={k}>
+              {FULLTEXT_POOLS[k]}
+            </option>
+          ))}
+        </select>
+        {origins.length > 1 && (
+          <>
+            <span className="small muted" style={{ marginLeft: '0.5rem' }}>
+              Commencer par :
+            </span>
+            <div className="seg">
+              <button className={origin === 'all' ? 'on' : ''} onClick={() => setOrigin('all')}>
+                Tous <span className="seg-count">{total}</span>
+              </button>
+              {origins.map((o) => (
+                <button key={o} className={origin === o ? 'on' : ''} onClick={() => setOrigin(o)}>
+                  {ORIGIN_LABEL[o]} <span className="seg-count">{counts[o]}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      {(hidden.maybe > 0 || hidden.exclude > 0 || hidden.none > 0) && (
+        <div className="notice warn small row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+          <span>
+            ⚠️ Des décisions de texte intégral existent sur des références qui n’apparaissent pas ici :{' '}
+            {[
+              hidden.maybe && `${hidden.maybe} incertaine${hidden.maybe > 1 ? 's' : ''} au tri`,
+              hidden.exclude && `${hidden.exclude} exclue${hidden.exclude > 1 ? 's' : ''} au tri`,
+              hidden.none && `${hidden.none} non triée${hidden.none > 1 ? 's' : ''}`,
+            ]
+              .filter(Boolean)
+              .join(', ')}
+            . Elles sont gardées, mais ni affichées ni comptées.
+          </span>
+          {hidden.maybe > 0 && pool === 'include' && (
+            <button className="btn small" onClick={() => setPool('include-maybe')}>
+              Afficher aussi les incertains
+            </button>
+          )}
+          {(hidden.exclude > 0 || hidden.none > 0) && (
+            <button className="btn small" onClick={() => setPool('all')}>
+              Afficher toutes les références
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

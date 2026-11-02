@@ -1,4 +1,4 @@
-import type { Project, RecordItem, SourceKind } from '../types';
+import type { FulltextPool, Project, RecordItem, SourceKind } from '../types';
 
 /** Type de source d'une référence (base de données, registre ou autre méthode). */
 export function recordKind(p: Project, r: RecordItem): SourceKind {
@@ -24,13 +24,38 @@ export function screeningKeys(p: Project): string[] {
  * dans le diagramme PRISMA 2020.
  */
 export function fulltextKeys(p: Project): string[] {
+  const pool = p.fulltextPool ?? 'include';
   return Object.values(p.records)
     .filter((r) => {
       if (isDuplicate(p, r.key)) return false;
-      if (recordKind(p, r) === 'other') return true;
-      return p.screening[r.key]?.decision === 'include';
+      if (recordKind(p, r) === 'other' || pool === 'all') return true;
+      const d = p.screening[r.key]?.decision;
+      return d === 'include' || (pool === 'include-maybe' && d === 'maybe');
     })
     .map((r) => r.key);
+}
+
+export const FULLTEXT_POOLS: Record<FulltextPool, string> = {
+  include: 'Les inclus au tri',
+  'include-maybe': 'Les inclus et les incertains au tri',
+  all: 'Toutes les références (hors PRISMA)',
+};
+
+/**
+ * Décisions de texte intégral (ou « introuvable ») sur des références qui n'y sont pas
+ * selon le réglage : elles existent mais ne sont ni affichées ni comptées.
+ */
+export function hiddenFulltextDecisions(p: Project): { maybe: number; exclude: number; none: number } {
+  const ft = new Set(fulltextKeys(p));
+  const out = { maybe: 0, exclude: 0, none: 0 };
+  for (const k of new Set([...Object.keys(p.fulltext), ...Object.keys(p.notRetrieved)])) {
+    if (!p.records[k] || ft.has(k) || isDuplicate(p, k)) continue;
+    const d = p.screening[k]?.decision;
+    if (d === 'maybe') out.maybe++;
+    else if (d === 'exclude') out.exclude++;
+    else out.none++;
+  }
+  return out;
 }
 
 /**
@@ -93,6 +118,10 @@ export interface PrismaCounts {
   otherIdentified: number;
   other: Column | null;
   totalIncluded: number;
+  /** Rapports recherchés qui étaient « incertains » au tri (réglage « inclus et incertains »). */
+  soughtFromMaybe: number;
+  /** Réglage « toutes les références » : le diagramme ne montre que le parcours PRISMA (inclus au tri). */
+  poolAll: boolean;
 }
 
 function column(p: Project, keys: string[]): Column {
@@ -143,14 +172,17 @@ export function computePrisma(p: Project): PrismaCounts {
   const duplicates = mainRecords.filter((r) => isDuplicate(p, r.key)).length;
 
   const screen = screeningKeys(p);
+  const withMaybe = p.fulltextPool === 'include-maybe';
   let screeningExcluded = 0;
   let screeningPending = 0;
   for (const k of screen) {
     const d = p.screening[k]?.decision;
     if (d === 'exclude') screeningExcluded++;
-    else if (d !== 'include') screeningPending++;
+    else if (d !== 'include' && !(withMaybe && d === 'maybe')) screeningPending++;
   }
-  const soughtMain = screen.filter((k) => p.screening[k]?.decision === 'include');
+  // Avec le réglage « inclus et incertains », les incertains sont aussi recherchés en texte intégral (et le diagramme le dit).
+  const soughtMain = screen.filter((k) => p.screening[k]?.decision === 'include' || (withMaybe && p.screening[k]?.decision === 'maybe'));
+  const soughtFromMaybe = withMaybe ? soughtMain.filter((k) => p.screening[k]?.decision === 'maybe').length : 0;
 
   const otherRecords = withKind.filter((x) => x.kind === 'other' && !isDuplicate(p, x.r.key)).map((x) => x.r);
   const otherMethods: [string, number][] = [
@@ -177,5 +209,7 @@ export function computePrisma(p: Project): PrismaCounts {
     otherIdentified,
     other,
     totalIncluded: main.included + (other?.included ?? 0),
+    soughtFromMaybe,
+    poolAll: p.fulltextPool === 'all',
   };
 }

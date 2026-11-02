@@ -57,6 +57,8 @@ export interface RecordItem {
   edition?: string;
 }
 
+export type FulltextPool = 'include' | 'include-maybe' | 'all';
+
 /** Famille de marqueurs (« marqueur parent »), gardée dans Biblikube. */
 export interface TagFamily {
   id: string;
@@ -273,6 +275,11 @@ export interface Project {
   reportComment?: string;
   /** Séances de travail mesurées dans l'application (minuterie). */
   timeLog?: TimeSession[];
+  /**
+   * Qui passe au texte intégral : les inclus au tri (par défaut), les inclus et les
+   * incertains, ou toutes les références (hors PRISMA).
+   */
+  fulltextPool?: FulltextPool;
   /** Marqueurs Zotero de la personne : familles (dans Biblikube) et historique des fusions. */
   tagWork?: { families: TagFamily[]; history: TagOp[]; ignoredVariants?: string[] };
   /** Labels importés de Rayyan (clé item -> labels), écrits dans Zotero en LF:rayyan:… */
