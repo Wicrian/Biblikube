@@ -14,8 +14,14 @@ const VALUE = (v: Value, f: Field) => {
   if (f === 'duplicate') return v ? 'doublon' : 'pas doublon';
   return v === 'include' ? 'inclus' : v === 'exclude' ? 'exclu' : v === 'maybe' ? 'incertain' : v === 'notretrieved' ? 'introuvable' : '—';
 };
-type Choice = 'zotero' | 'biblikube';
+/** « col » : le dossier Zotero ; « tag » : l'étiquette LF: ; « biblikube » : l'état de Biblikube. */
+type Choice = 'col' | 'tag' | 'biblikube';
 const id = (d: Difference) => `${d.key}:${d.field}`;
+/** Dans Zotero, le dossier et l'étiquette ne disent pas la même chose. */
+const isConflict = (d: Difference) => d.zCol !== d.zTag;
+const chosenValue = (d: Difference, c: Choice): Value => (c === 'col' ? d.zCol : c === 'tag' ? d.zTag : d.local);
+/** Par défaut : Zotero quand il est d'accord avec lui-même ; sinon (ou si une modification attend l'envoi), Biblikube. */
+const defaultChoice = (d: Difference): Choice => (d.pending || isConflict(d) ? 'biblikube' : 'col');
 
 export function CompareZotero({ onClose }: { onClose: () => void }) {
   const { project: p, update, client, markDirty } = useProject();
@@ -42,7 +48,7 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
       const d = compareWithZotero(p, items);
       setDiffs(d);
       // Par défaut : garder Zotero, sauf si Biblikube a une modification pas encore envoyée.
-      setChoice(Object.fromEntries(d.map((x) => [id(x), x.pending ? 'biblikube' : 'zotero'])));
+      setChoice(Object.fromEntries(d.map((x) => [id(x), defaultChoice(x)])));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -56,11 +62,14 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
     for (const d of diffs ?? []) c[d.field] = (c[d.field] ?? 0) + 1;
     return c;
   }, [diffs]);
+  const conflicts = useMemo(() => (diffs ?? []).filter(isConflict).length, [diffs]);
   const setAll = (c: Choice) => setChoice((cur) => ({ ...cur, ...Object.fromEntries(shown.map((d) => [id(d), c])) }));
+  // Ce qui changerait vraiment dans Biblikube.
+  const changing = (diffs ?? []).filter((d) => chosenValue(d, choice[id(d)] ?? 'biblikube') !== d.local);
 
   const apply = () => {
     if (!diffs) return;
-    const toZotero = diffs.filter((d) => choice[id(d)] === 'zotero');
+    const toZotero = changing.map((d) => ({ ...d, zotero: chosenValue(d, choice[id(d)]) }));
     const keys = [...new Set(diffs.map((d) => d.key))];
     setUndo({ screening: p.screening, fulltext: p.fulltext, duplicates: p.duplicates, notRetrieved: p.notRetrieved, keys });
     update((cur) => keepZotero(cur, toZotero));
@@ -68,7 +77,7 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
     markDirty(keys);
     const kz = toZotero.length;
     const kb = diffs.length - kz;
-    setDone(`Appliqué : ${kz} écart${kz > 1 ? 's' : ''} réglé${kz > 1 ? 's' : ''} en gardant Zotero, ${kb} en gardant Biblikube. Zotero est mis à jour à la synchronisation.`);
+    setDone(`Appliqué : ${kz} décision${kz > 1 ? 's' : ''} de Biblikube remplacée${kz > 1 ? 's' : ''} par celle de Zotero, ${kb} écart${kb > 1 ? 's' : ''} réglé${kb > 1 ? 's' : ''} en gardant Biblikube. Zotero est mis à jour à la synchronisation (dossiers et étiquettes d’accord).`);
     setDiffs(null);
   };
 
@@ -144,13 +153,27 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
                     ))}
                 </div>
                 <span className="spacer" />
-                <button className="btn small" onClick={() => setAll('zotero')}>
-                  Tout : garder Zotero
+                <button className="btn small" onClick={() => setAll('col')}>
+                  Tout : garder les dossiers
+                </button>
+                <button className="btn small" onClick={() => setAll('tag')}>
+                  Tout : garder les étiquettes
                 </button>
                 <button className="btn small" onClick={() => setAll('biblikube')}>
                   Tout : garder Biblikube
                 </button>
               </div>
+              {conflicts > 0 && (
+                <div className="notice warn small">
+                  ⚠️ <strong>
+                    {conflicts} écart{conflicts > 1 ? 's' : ''} où Zotero se contredit lui-même
+                  </strong>{' '}
+                  : le dossier dit une chose, l’étiquette {p.sync.tagPrefix || 'LF'}:… une autre. Ça arrive quand un outil ou une personne déplace des
+                  fiches entre dossiers sans changer les étiquettes (ou l’inverse). Biblikube ne tranche pas à votre place : ces lignes restent sur
+                  « Biblikube » (Biblikube ne change pas, et Zotero sera remis comme lui). Si c’est Zotero qui a raison, choisissez « Dossier » ou
+                  « Étiquette ».
+                </div>
+              )}
               <div className="table-wrap compare-wrap">
                 <table className="compare-table">
                   <thead>
@@ -177,18 +200,32 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
                             <strong>{VALUE(d.local, d.field)}</strong>
                           </td>
                           <td>
-                            <strong>{VALUE(d.zotero, d.field)}</strong>
-                            {split && (
-                              <div className="small muted">
-                                dossier : {VALUE(d.zCol, d.field)} · étiquette : {VALUE(d.zTag, d.field)}
+                            {split ? (
+                              <div className="small">
+                                dossier : <strong>{VALUE(d.zCol, d.field)}</strong>
+                                <br />
+                                étiquette : <strong>{VALUE(d.zTag, d.field)}</strong>
                               </div>
+                            ) : (
+                              <strong>{VALUE(d.zCol, d.field)}</strong>
                             )}
                           </td>
                           <td>
                             <div className="seg small-seg">
-                              <button className={c === 'zotero' ? 'on' : ''} onClick={() => setChoice({ ...choice, [id(d)]: 'zotero' })}>
-                                Zotero
-                              </button>
+                              {split ? (
+                                <>
+                                  <button className={c === 'col' ? 'on' : ''} onClick={() => setChoice({ ...choice, [id(d)]: 'col' })}>
+                                    Dossier
+                                  </button>
+                                  <button className={c === 'tag' ? 'on' : ''} onClick={() => setChoice({ ...choice, [id(d)]: 'tag' })}>
+                                    Étiquette
+                                  </button>
+                                </>
+                              ) : (
+                                <button className={c === 'col' || c === 'tag' ? 'on' : ''} onClick={() => setChoice({ ...choice, [id(d)]: 'col' })}>
+                                  Zotero
+                                </button>
+                              )}
                               <button className={c === 'biblikube' ? 'on' : ''} onClick={() => setChoice({ ...choice, [id(d)]: 'biblikube' })}>
                                 Biblikube
                               </button>
@@ -201,8 +238,8 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
                 </table>
               </div>
               <p className="small muted" style={{ margin: 0 }}>
-                « Zotero » : Biblikube prend la valeur de Zotero (le dossier, s’il diffère, sinon l’étiquette). « Biblikube » : Zotero est remis comme Biblikube le
-                dit. Dans les deux cas, dossiers et étiquettes sont ensuite réécrits pour être d’accord.
+                « Zotero », « Dossier » ou « Étiquette » : Biblikube prend cette valeur. « Biblikube » : Zotero est remis comme Biblikube le dit. Dans tous les
+                cas, dossiers et étiquettes sont ensuite réécrits pour être d’accord.
               </p>
               <div className="row" style={{ flexWrap: 'wrap' }}>
                 <button className="btn small" onClick={() => exportProjectJson(p)}>
@@ -213,7 +250,7 @@ export function CompareZotero({ onClose }: { onClose: () => void }) {
                   Fermer sans rien changer
                 </button>
                 <button className="btn primary" onClick={apply}>
-                  Appliquer ({diffs.length})
+                  Appliquer ({changing.length} décision{changing.length > 1 ? 's' : ''} changée{changing.length > 1 ? 's' : ''} dans Biblikube)
                 </button>
               </div>
             </>

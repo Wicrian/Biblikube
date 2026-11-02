@@ -5,7 +5,7 @@ import type { Project, RecordItem } from '../types';
 import { mergeImport } from '../zotero/mapping';
 
 /** À partir de ce nombre de références modifiées d'un coup, Biblikube demande avant de reprendre. */
-export const PULL_GUARD = 10;
+export const PULL_GUARD = 20;
 
 export type ChangeField = 'screening' | 'fulltext' | 'duplicate' | 'organisation';
 
