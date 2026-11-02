@@ -7,6 +7,7 @@ import { importFromZotero } from '../zotero/sync';
 import { reconcileFromZotero } from '../zotero/pull';
 import { RayyanImport } from './RayyanImport';
 import { TransferDialog } from './TransferDialog';
+import { CompareZotero } from './CompareZotero';
 
 const KINDS: [SourceKind, string][] = [
   ['database', 'Base de données'],
@@ -25,6 +26,7 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
   const [error, setError] = useState('');
   const [result, setResult] = useState('');
   const [transfer, setTransfer] = useState(false);
+  const [compare, setCompare] = useState(false);
 
   const baseClient = settings.apiKey ? new ZoteroClient(settings.apiKey) : null;
 
@@ -286,6 +288,19 @@ export function ImportView({ onSettings, onDone, compact = false }: { onSettings
           </table>
         </section>
       )}
+      {!compact && total > 0 && p.library && settings.apiKey && (
+        <section className="panel stack">
+          <h2 style={{ margin: 0 }}>Comparer avec Zotero</h2>
+          <p className="small muted" style={{ margin: 0 }}>
+            Après un travail fait directement dans Zotero, sur un autre appareil ou par un autre outil : vérifiez que Biblikube et Zotero disent la même
+            chose, et choisissez quoi garder là où ils diffèrent.
+          </p>
+          <button className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setCompare(true)}>
+            Comparer avec Zotero…
+          </button>
+        </section>
+      )}
+      {compare && <CompareZotero onClose={() => setCompare(false)} />}
       {!compact && total > 0 && <RayyanImport />}
       {!compact && total > 0 && p.library && settings.apiKey && (
         <section className="panel stack">
