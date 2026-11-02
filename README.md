@@ -182,6 +182,12 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.9 — novembre 2026**
+- **Comparer avec Zotero** (écran Identification) : Biblikube relit toutes les fiches de la revue dans Zotero et montre
+  celles où Zotero ne dit pas la même chose (tri, texte intégral, doublons), par exemple après un travail fait
+  directement dans Zotero ou par un autre outil. Pour chaque écart, on choisit de garder Zotero ou Biblikube ; rien ne
+  change sans accord, une sauvegarde est proposée avant, et « Annuler » remet Biblikube comme avant.
+
 **0.8 — novembre 2026**
 - **Texte intégral : choisir qui y passe**, pour chaque revue : les inclus au tri (par défaut, comme avant), les inclus
   et les incertains, ou toutes les références (hors PRISMA). Dans l’écran, « Commencer par » permet de travailler
