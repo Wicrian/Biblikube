@@ -182,6 +182,15 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.8 — novembre 2026**
+- **Texte intégral : choisir qui y passe**, pour chaque revue : les inclus au tri (par défaut, comme avant), les inclus
+  et les incertains, ou toutes les références (hors PRISMA). Dans l’écran, « Commencer par » permet de travailler
+  d’abord les inclus, puis les incertains, etc.
+- Les décisions de texte intégral sur des références hors du réglage ne sont plus cachées : un bandeau les signale et
+  propose de les afficher.
+- PRISMA : avec « inclus et incertains », les incertains comptent parmi les rapports recherchés (« dont N incertains au
+  tri ») et une note rappelle de le préciser dans la méthode.
+
 **0.7 — octobre 2026**
 - **Vos marqueurs Zotero dans Biblikube** : sous « Classer » (tri, texte intégral, fiche ouverte de l’Organisation), on
   coche ou décoche ses marqueurs Zotero, on en ajoute ; chaque clic est écrit dans Zotero, avec les couleurs Zotero.
