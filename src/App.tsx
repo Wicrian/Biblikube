@@ -24,6 +24,7 @@ import { Fiches } from './components/Fiches';
 import { Marqueurs } from './components/Marqueurs';
 import { SessionsDialog, TimePill, useTimeTracker } from './components/TimeTracker';
 import { QuestionLine } from './components/QuestionLine';
+import { HeldPullBanner } from './components/HeldPullBanner';
 
 type View = ViewId;
 
@@ -384,6 +385,7 @@ function ProjectShell({ onHome, onSettings, onTheme }: { onHome: () => void; onS
         )}
       </header>
       <main>
+        <HeldPullBanner />
         {pullInfo && (
           <div className="notice row" style={{ marginBottom: '1rem' }}>
             Reçu de Zotero : {pullInfo.changed > 0 && `${pullInfo.changed} décision(s) modifiée(s) dans Zotero`}

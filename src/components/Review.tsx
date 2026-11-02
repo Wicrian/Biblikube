@@ -848,24 +848,39 @@ function FulltextPoolBar({
   counts: Record<string, number>;
   total: number;
 }) {
-  const { project: p, update, markDirty } = useProject();
+  const { project: p, update, markDirty, client } = useProject();
   const pool = p.fulltextPool ?? 'include';
   const hidden = hiddenFulltextDecisions(p);
-  const setPool = (next: FulltextPool) => {
-    if (next === 'all' && p.mode === 'systematic' && !confirm('« Toutes les références » ne correspond pas à un parcours PRISMA : le diagramme ne montrera que les inclus au tri. Continuer ?')) return;
+  const [asked, setAsked] = useState<FulltextPool | null>(null);
+  const moves = (next: FulltextPool) => {
     const before = new Set(fulltextKeys(p));
     const after = new Set(fulltextKeys({ ...p, fulltextPool: next }));
+    const moving = [...before, ...after].filter((k) => before.has(k) !== after.has(k));
+    // Seules celles qui ont une décision de texte intégral changent de dossier dans Zotero.
+    const visible = moving.filter((k) => k in p.fulltext || k in p.notRetrieved);
+    return { moving, out: visible.filter((k) => before.has(k)).length, in: visible.filter((k) => after.has(k)).length };
+  };
+  const applyPool = (next: FulltextPool) => {
     update((cur) => ({ ...cur, fulltextPool: next }));
     // Les références qui entrent ou sortent du texte intégral sont réécrites dans Zotero (dossiers « 2 – … », « 3 – … »).
-    markDirty([...before, ...after].filter((k) => before.has(k) !== after.has(k)));
+    markDirty(moves(next).moving);
     setOrigin('all');
+    setAsked(null);
   };
+  const setPool = (next: FulltextPool) => {
+    if (next === pool) return;
+    const m = moves(next);
+    const prismaWarning = next === 'all' && p.mode === 'systematic';
+    if (prismaWarning || (client && (m.in || m.out))) setAsked(next);
+    else applyPool(next);
+  };
+  const askedMoves = asked ? moves(asked) : null;
   const origins = (['include', 'maybe', 'exclude', 'none', 'other'] as const).filter((o) => counts[o]);
   return (
     <div className="panel stack" style={{ padding: '0.75rem 1.1rem', gap: '0.5rem' }}>
       <div className="row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
         <span className="small muted">Au texte intégral :</span>
-        <select style={{ width: 'auto' }} value={pool} onChange={(e) => setPool(e.target.value as FulltextPool)}>
+        <select style={{ width: 'auto' }} value={asked ?? pool} onChange={(e) => setPool(e.target.value as FulltextPool)}>
           {(Object.keys(FULLTEXT_POOLS) as FulltextPool[]).map((k) => (
             <option key={k} value={k}>
               {FULLTEXT_POOLS[k]}
@@ -890,7 +905,49 @@ function FulltextPoolBar({
           </>
         )}
       </div>
-      {(hidden.maybe > 0 || hidden.exclude > 0 || hidden.none > 0) && (
+      {asked && askedMoves && (
+        <div className="notice warn small stack" style={{ gap: '0.5rem' }}>
+          <div>
+            Passer à « <strong>{FULLTEXT_POOLS[asked]}</strong> » :
+            <ul style={{ margin: '0.3rem 0 0', paddingLeft: '1.2rem' }}>
+              {client && askedMoves.out > 0 && (
+                <li>
+                  <strong>
+                    {askedMoves.out} référence{askedMoves.out > 1 ? 's vont sortir' : ' va sortir'}
+                  </strong>{' '}
+                  des dossiers « 2 – Texte intégral » et « 3 – Inclus dans la revue » de Zotero (et perdre leurs étiquettes {p.sync.tagPrefix || 'LF'}:texte:…).
+                </li>
+              )}
+              {client && askedMoves.in > 0 && (
+                <li>
+                  <strong>
+                    {askedMoves.in} référence{askedMoves.in > 1 ? 's vont entrer' : ' va entrer'}
+                  </strong>{' '}
+                  dans ces dossiers de Zotero.
+                </li>
+              )}
+              {client && (askedMoves.out > 0 || askedMoves.in > 0) && (
+                <li>
+                  Vos décisions de texte intégral restent <strong>gardées dans Biblikube</strong> : revenir au réglage précédent les remet dans Zotero.
+                </li>
+              )}
+              {asked === 'all' && p.mode === 'systematic' && (
+                <li>« Toutes les références » ne correspond pas à un parcours PRISMA : le diagramme ne montrera que les inclus au tri.</li>
+              )}
+            </ul>
+          </div>
+          <div className="row" style={{ gap: '0.5rem' }}>
+            <span className="spacer" />
+            <button className="btn small" onClick={() => setAsked(null)}>
+              Annuler
+            </button>
+            <button className="btn small primary" onClick={() => applyPool(asked)}>
+              Changer le réglage
+            </button>
+          </div>
+        </div>
+      )}
+      {!asked && (hidden.maybe > 0 || hidden.exclude > 0 || hidden.none > 0) && (
         <div className="notice warn small row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
           <span>
             ⚠️ Des décisions de texte intégral existent sur des références qui n’apparaissent pas ici :{' '}

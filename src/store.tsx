@@ -1,13 +1,25 @@
 // État partagé du projet ouvert : sauvegarde automatique locale et
 // synchronisation automatique vers Zotero.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Decision, Project, Settings, Stage, StageDecision } from './types';
+import type { Decision, Project, RecordItem, Settings, Stage, StageDecision } from './types';
 import { saveProject } from './lib/storage';
 import { ZoteroClient } from './zotero/api';
 import { pushToZotero } from './zotero/sync';
 import { applyChanges, fetchChanges } from './zotero/pull';
 import { saveSnapshot } from './zotero/snapshot';
 import { mergeStructure, syncOrganisationStructure } from './zotero/organisationSync';
+import { describePull, keepBiblikube, PULL_GUARD, type PullChange } from './lib/pullGuard';
+
+/** Gros changement venu de Zotero, en attente de l'accord de la personne. */
+export interface HeldPull {
+  incoming: RecordItem[];
+  libraryVersion: number | null;
+  /** Références dont une décision ou un classement changerait. */
+  keys: string[];
+  changes: PullChange[];
+  added: number;
+  at: string;
+}
 
 export type SyncStatus = { state: 'off' | 'idle' | 'pending' | 'syncing' | 'error'; message?: string; done?: number; total?: number };
 
@@ -30,6 +42,10 @@ interface Ctx {
   /** Résumé de la dernière lecture de changements venus de Zotero. */
   pullInfo: { changed: number; added: number } | null;
   clearPullInfo: () => void;
+  /** Gros changement venu de Zotero, pas encore repris (la lecture de Zotero est en pause). */
+  heldPull: HeldPull | null;
+  /** Reprendre les changements de Zotero (true) ou garder Biblikube et remettre Zotero (false). */
+  resolveHeldPull: (accept: boolean) => void;
 }
 
 const ProjectContext = createContext<Ctx | null>(null);
@@ -50,6 +66,9 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
   const snapshotting = useRef(false);
   const [pullInfo, setPullInfo] = useState<{ changed: number; added: number } | null>(null);
   const dirtyDuringSync = useRef(new Set<string>());
+  const [heldPull, setHeldPull] = useState<HeldPull | null>(null);
+  const held = useRef<HeldPull | null>(null);
+  held.current = heldPull;
 
   const client = useMemo(
     () => (settings.apiKey && project.library ? new ZoteroClient(settings.apiKey, project.library) : null),
@@ -150,7 +169,8 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
 
   // Lecture des changements faits dans Zotero (étiquettes, collections, nouvelles références).
   const pullNow = useCallback(async () => {
-    if (!client || syncing.current || pulling.current) return;
+    // En pause tant qu'un gros changement attend une réponse.
+    if (!client || syncing.current || pulling.current || held.current) return;
     const start = ref.current;
     if (start.sync.libraryVersion === null) return;
     pulling.current = true;
@@ -166,6 +186,12 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
         return;
       }
       const preview = applyChanges(ref.current, incoming, libraryVersion);
+      if (preview.changed.length >= PULL_GUARD) {
+        // Garde-fou : trop de changements d'un coup, on demande avant de les reprendre.
+        const changes = describePull(ref.current, preview.project, preview.changed);
+        setHeldPull({ incoming, libraryVersion, keys: preview.changed, changes, added: preview.added, at: new Date().toISOString() });
+        return;
+      }
       setProject((cur) => applyChanges(cur, incoming, libraryVersion).project);
       if (preview.changed.length || preview.added) setPullInfo({ changed: preview.changed.length, added: preview.added });
     } catch (e) {
@@ -225,6 +251,24 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
       ? { state: 'pending', message: `${project.sync.pending.length} modification(s) à envoyer` }
       : syncStatus;
 
-  const value: Ctx = { project, settings, client, update, decide, rememberReason, markDirty, syncNow, syncStatus: status, pullNow, pullInfo, clearPullInfo: () => setPullInfo(null), saveSnapshotNow, snapshotError };
+  const resolveHeldPull = useCallback(
+    (accept: boolean) => {
+      const h = held.current;
+      if (!h) return;
+      if (accept) {
+        setProject((cur) => applyChanges(cur, h.incoming, h.libraryVersion).project);
+        setPullInfo({ changed: h.keys.length, added: h.added });
+      } else {
+        setProject((cur) => keepBiblikube(cur, h.incoming, h.libraryVersion));
+        // Zotero est remis comme Biblikube le connaît.
+        markDirty(h.keys);
+      }
+      held.current = null;
+      setHeldPull(null);
+    },
+    [markDirty],
+  );
+
+  const value: Ctx = { project, settings, client, update, decide, rememberReason, markDirty, syncNow, syncStatus: status, pullNow, pullInfo, clearPullInfo: () => setPullInfo(null), saveSnapshotNow, snapshotError, heldPull, resolveHeldPull };
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;
 }
