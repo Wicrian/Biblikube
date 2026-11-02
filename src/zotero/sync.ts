@@ -120,11 +120,12 @@ function stageHtml(title: string, d: StageDecision | undefined): string {
 }
 
 /** Contenu HTML de la note « Biblikube » attachée à l'item dans Zotero. */
-export function noteHtml(p: Project, key: string): string | null {
+export function noteHtml(p: Project, key: string, keepExisting = false): string | null {
   const s = p.screening[key];
   const f = p.fulltext[key];
   const hasContent = [s, f].some((d) => d && (d.note.trim() || d.reasons.length));
-  if (!hasContent && !(key in p.notRetrieved)) return null;
+  // Une note existe déjà : on la met à jour même sans raison ni commentaire, pour qu'elle ne garde pas une ancienne décision.
+  if (!hasContent && !(key in p.notRetrieved) && !keepExisting) return null;
   return (
     `<h2>Biblikube – ${esc(p.name)}</h2>` +
     stageHtml('Tri titre-résumé', s) +
@@ -239,8 +240,8 @@ export async function pushToZotero(
       const writes: Partial<ZItemData>[] = [];
       const parents: string[] = [];
       for (const k of batch) {
-        const html = noteHtml(p, k);
         const existing = zoteroNotes[k] ? noteByKey.get(zoteroNotes[k]) : undefined;
+        const html = noteHtml(p, k, !!existing);
         if (!html) continue;
         if (existing) {
           if (existing.data.note === html) continue;

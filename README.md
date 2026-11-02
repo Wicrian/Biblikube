@@ -182,6 +182,13 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.10.1 — novembre 2026**
+- Quand une décision est prise directement dans Zotero (fiche glissée dans un autre dossier, ou étiquette `LF:` changée),
+  Biblikube remet aussitôt la fiche en ordre : un seul dossier, la bonne étiquette, la note à jour. Avant, l’ancien
+  dossier et l’ancienne étiquette restaient, et la décision pouvait revenir en arrière à la lecture suivante.
+- La note « Biblikube » d’une fiche est mise à jour même quand il n’y a plus de raison ni de commentaire (elle ne
+  garde plus une ancienne décision).
+
 **0.10 — novembre 2026**
 - **Garde-fou** : quand Zotero change 20 références ou plus d’un coup (un autre outil, un déplacement massif de
   fiches…), Biblikube ne reprend plus rien tout seul. Un bandeau montre le détail et propose de reprendre ces

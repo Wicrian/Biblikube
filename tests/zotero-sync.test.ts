@@ -281,3 +281,17 @@ describe('fiche ajoutée à un dossier sans être retirée de l’autre', () => 
     expect(w.collections).not.toContain('fulltext_maybe');
   });
 });
+
+describe('note Biblikube', () => {
+  it('une note existante est mise à jour même sans raison ni commentaire', async () => {
+    const { demoProject } = await import('../src/lib/demo');
+    const { noteHtml } = await import('../src/zotero/sync');
+    const p = demoProject();
+    const k = Object.keys(p.records)[0];
+    p.screening = { [k]: { decision: 'exclude', reasons: [], note: '', at: '2026-11-01T10:00:00Z' } };
+    p.fulltext = {};
+    p.notRetrieved = {};
+    expect(noteHtml(p, k)).toBeNull();
+    expect(noteHtml(p, k, true)).toContain('Exclu');
+  });
+});
