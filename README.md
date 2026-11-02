@@ -182,6 +182,17 @@ prévu dans la feuille de route.
 Le numéro de version est affiché en bas de la FAQ, sur la page d’accueil. Tant qu’il commence par 0, l’application
 est jeune et peut encore changer ; la version 1.0 sera la première version « stable ».
 
+**0.10 — novembre 2026**
+- **Garde-fou** : quand Zotero change 20 références ou plus d’un coup (un autre outil, un déplacement massif de
+  fiches…), Biblikube ne reprend plus rien tout seul. Un bandeau montre le détail et propose de reprendre ces
+  changements ou de garder Biblikube (Zotero est alors remis comme Biblikube le connaît). Vos propres décisions ne
+  déclenchent jamais ce bandeau.
+- **Texte intégral** : avant de changer le réglage « Au texte intégral », Biblikube indique combien de références vont
+  entrer ou sortir des dossiers « 2 – … » et « 3 – … » de Zotero, et attend votre accord.
+- **Comparer avec Zotero (correction)** : quand le dossier et l’étiquette LF: d’une fiche ne disent pas la même chose,
+  l’outil ne choisit plus l’étiquette tout seul. Il signale la contradiction et vous choisissez : dossier, étiquette ou
+  Biblikube.
+
 **0.9 — novembre 2026**
 - **Comparer avec Zotero** (écran Identification) : Biblikube relit toutes les fiches de la revue dans Zotero et montre
   celles où Zotero ne dit pas la même chose (tri, texte intégral, doublons), par exemple après un travail fait
