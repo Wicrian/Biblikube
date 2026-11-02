@@ -254,3 +254,30 @@ describe('Zotero', () => {
     expect(restored.screening.B.decision).toBe('exclude');
   });
 });
+
+describe('fiche ajoutée à un dossier sans être retirée de l’autre', () => {
+  it('une fois Zotero remis en ordre, la décision reprise reste stable', async () => {
+    const { demoProject } = await import('../src/lib/demo');
+    const { reconcileFromZotero } = await import('../src/zotero/pull');
+    const { desiredState } = await import('../src/zotero/sync');
+    const { toRecord } = await import('../src/zotero/mapping');
+    const d = (decision: 'include' | 'exclude' | 'maybe') => ({ decision, reasons: [], note: '', at: '2026-11-01T10:00:00Z' });
+    const COLS: Record<string, string> = { root: 'R', screening_include: 'SI', fulltext_exclude: 'FE', fulltext_maybe: 'FM', included: 'INC' };
+    const p = demoProject();
+    p.zoteroCollections = COLS;
+    p.sync.lastSync = '2026-11-01T10:00:00Z';
+    const k = Object.keys(p.records).find((x) => !['DEMO0018', 'DEMO0002', 'DEMO0005', 'DEMO0020'].includes(x))!;
+    p.screening = { [k]: d('include') };
+    p.fulltext = { [k]: d('maybe') };
+    const rec = (cols: string[], tags: string[]) =>
+      toRecord({ key: k, version: 9, data: { key: k, version: 9, itemType: 'journalArticle', title: 't', creators: [], collections: cols, tags: tags.map((tag) => ({ tag })) } } as ZItem, p.records[k].sources);
+    // Glissée dans « Exclus », restée dans « Incertains » avec l'étiquette « incertain ».
+    const p1 = reconcileFromZotero(p, [rec(['SI', 'FM', 'FE'], ['LF:tri:inclus', 'LF:texte:incertain'])]).project;
+    expect(p1.fulltext[k].decision).toBe('exclude');
+    // Biblikube réécrit la fiche (c'est ce que fait la synchronisation après une reprise) : relue, elle reste « exclu ».
+    const w = desiredState(p1, k);
+    const p2 = reconcileFromZotero(p1, [rec(w.collections.map((c) => COLS[c]), w.tags)]).project;
+    expect(p2.fulltext[k].decision).toBe('exclude');
+    expect(w.collections).not.toContain('fulltext_maybe');
+  });
+});

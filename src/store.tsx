@@ -193,13 +193,17 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
         return;
       }
       setProject((cur) => applyChanges(cur, incoming, libraryVersion).project);
+      // Une décision reprise de Zotero est réécrite aussitôt : un seul dossier, la bonne étiquette LF:.
+      // Sinon, une fiche ajoutée à « Exclus » mais restée dans « Incertains » (avec l'ancienne étiquette)
+      // pourrait revenir à « incertain » à la lecture suivante.
+      if (preview.changed.length) markDirty(preview.changed);
       if (preview.changed.length || preview.added) setPullInfo({ changed: preview.changed.length, added: preview.added });
     } catch (e) {
       setSyncStatus({ state: 'error', message: `Lecture depuis Zotero : ${e instanceof Error ? e.message : String(e)}` });
     } finally {
       pulling.current = false;
     }
-  }, [client]);
+  }, [client, markDirty]);
 
   // Sauvegarde du projet dans Zotero, 15 secondes après la dernière modification.
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
@@ -257,6 +261,7 @@ export function ProjectProvider({ initial, settings, children }: { initial: Proj
       if (!h) return;
       if (accept) {
         setProject((cur) => applyChanges(cur, h.incoming, h.libraryVersion).project);
+        markDirty(h.keys);
         setPullInfo({ changed: h.keys.length, added: h.added });
       } else {
         setProject((cur) => keepBiblikube(cur, h.incoming, h.libraryVersion));
